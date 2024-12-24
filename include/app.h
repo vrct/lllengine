@@ -2,6 +2,8 @@
 #define APP_H
 
 #include "lll.h"
+#include "ecs/entity.h"
+#include "ecs/systems/renderSystem.h"
 //#include "camera.h"
 
 class app
@@ -11,6 +13,8 @@ class app
         lll engine;
         //maybe change maybe no need
         void pollEvents();
+        std::vector<Entity> entities;
+
         //todo: hold current ticks in here too 
 
 //todo: protected maybe better, and seperate game.cpp class

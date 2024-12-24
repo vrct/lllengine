@@ -97,6 +97,42 @@ void Renderer::updateBuffers()
     }
 }
 
+
+void Renderer::drawEntities(const std::vector<Entity>& entities) {
+    vertices.clear();
+
+    for (const auto& entity : entities) {
+        auto* position = entity.getComponent<PositionComp>();
+        if (position) {
+            float w = 100;
+            float h = 100;
+            vec4 color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+            vertices.push_back(Vertex{position->x, position->y, w, h, color});
+            // Sol üst köşe
+            vertices.push_back(Vertex{position->x, position->y + h, w, h, color});
+            // Sağ alt köşe
+            vertices.push_back(Vertex{position->x + w, position->y, w, h, color});
+            // Sağ üst köşe
+            vertices.push_back(Vertex{position->x + w, position->y + h, w, h, color});
+
+            unsigned int indices_offset = vertexCount * 4;
+
+            indices.push_back(indices_offset);
+            indices.push_back(indices_offset + 1);
+            indices.push_back(indices_offset + 2);
+            indices.push_back(indices_offset + 1);
+            indices.push_back(indices_offset + 2);
+            indices.push_back(indices_offset + 3);
+
+            std::cout << "X: " << position->x << "Y: " << position->y << std::endl;
+
+            vertexCount++;
+        }
+    }
+
+    draw();
+}
+
 void Renderer::draw()
 {
     if(vertexCount == 0) return;

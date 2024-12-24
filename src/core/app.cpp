@@ -34,6 +34,12 @@ int app::init()
     //Shader shader = Shader("resources/shaders/vertex.vert", "resources/shaders/fragment.frag");
     engine.ecs_renderer = new Renderer(*shader);
     engine.ecs_renderer->windowSize = windowSize;
+
+    Entity entity1;
+    entity1.addComponent<PositionComp>(100.0f, 200.0f);
+    //todo: addMethod for much readablity
+    entities.push_back(entity1);
+
     //initSquare();
     //move to another method (camPos, camView, camZoom)
     //cam = Camera(vec4(), vec4(windowSize.x, windowSize.y), 100);
@@ -91,7 +97,7 @@ void app::update()
     float speed = 1.0f;
     float time = (startTicks2 / 1000.0f) * speed;
 
-    for (int i = 0; i < hor_Count + 1; i++)
+    /*for (int i = 0; i < hor_Count + 1; i++)
     {
         for (int j = 0; j < vert_Count + 1; j++)
         {
@@ -106,20 +112,19 @@ void app::update()
             //vec4 color = vec4((255 / hor_Count) * i / 250.0f, (255 / vert_Count) * j / 250.0f, fabs(sin((startTicks2 / 1000) * PI)));
             //drawSquare(i*squareWidth, j*squareHeight, squareWidth, squareHeight, color);
 
-            /*float x1 = (((i*squareWidth) / winSize.x) * 2) - 1;
-            float y1 = (((j*squareHeight) / winSize.y) * 2) - 1;
-            float x2 = (squareWidth / winSize.x) * 2;
-            float y2 = (squareHeight / winSize.y) * 2;
-            */
+            //float x1 = (((i*squareWidth) / winSize.x) * 2) - 1;
+            //float y1 = (((j*squareHeight) / winSize.y) * 2) - 1;
+            //float x2 = (squareWidth / winSize.x) * 2;
+            //float y2 = (squareHeight / winSize.y) * 2;
 
             //std::cout << "UPDATE HAPPENED RESIZE: " << sizeof(float[4]) << " " << sizeof(asd) << " " << asd.data() << " " << y2 << std::endl;
 
             //pushVertex(&engine.renderer, x1, y1, x2, y2, vec4(red,green,blue));
             //engine.ecs_renderer->pushVertex({x1, y1, x2, y2, vec4(red,green,blue)});
-            engine.ecs_renderer->pushVertex({i*(float)squareWidth, j*(float)squareHeight, (float)squareWidth, (float)squareHeight, vec4(red,green,blue)});
+            //engine.ecs_renderer->pushVertex({i*(float)squareWidth, j*(float)squareHeight, (float)squareWidth, (float)squareHeight, vec4(red,green,blue)});
         }
-    }
-    
+    }*/
+
 }
 
 
@@ -137,7 +142,8 @@ void app::draw()
     float x2 = (20 / winSize.x) * 2;
     float y2 = (20 / winSize.y) * 2;
     engine.ecs_renderer->pushVertex({x1, y1, x2, y2, vec4(1.0f, 0.0f, 1.0f)});*/
-    engine.ecs_renderer->draw();
+    //engine.ecs_renderer->draw();
+    engine.ecs_renderer->drawEntities(entities);
     engine.calculateFPS();
 }
 

@@ -4,6 +4,8 @@
 #include "vector"
 #include "vec4.h"
 #include "shader.h"
+#include "ecs/entity.h"
+#include "ecs/components/positioncomp.h"
 
 struct Vertex {
     float x,y;
@@ -20,6 +22,7 @@ class Renderer {
         vec4 windowSize;
         void pushVertex(const Vertex& vertex);
         void draw();
+        void drawEntities(const std::vector<Entity>& entities);
         void clear();
 
     private:
