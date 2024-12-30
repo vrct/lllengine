@@ -28,7 +28,7 @@ class app
         todo: appname, bundleid, maxfps vs. info about game
     */
         //create engine instance
-        int start(int width = 640, int height = 360);
+        int start(int width = 500, int height = 500);
         //run init methods
         int init();
         //override this method
@@ -39,6 +39,11 @@ class app
         int pause();
         //kill every process and memory allocations
         int kill();
+
+        //todo: temporary change here to entity manager
+        void addEntity(const Entity &entity) {
+            entities.push_back(entity);
+        }
 };
 
 #endif

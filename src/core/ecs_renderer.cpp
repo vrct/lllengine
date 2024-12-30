@@ -102,18 +102,17 @@ void Renderer::drawEntities(const std::vector<Entity>& entities) {
     vertices.clear();
 
     for (const auto& entity : entities) {
-        auto* position = entity.getComponent<PositionComp>();
-        if (position) {
-            float w = 100;
-            float h = 100;
-            vec4 color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
-            vertices.push_back(Vertex{position->x, position->y, w, h, color});
+        auto* position = entity.getComponent<PositionComp>(Position);
+        auto* size = entity.getComponent<SizeComp>(Size);
+        auto* color = entity.getComponent<ColorComp>(Color);
+        //if (position && size && color) {
+            vertices.push_back(Vertex{position->x, position->y, size->w, size->h, color->color});
             // Sol üst köşe
-            vertices.push_back(Vertex{position->x, position->y + h, w, h, color});
+            vertices.push_back(Vertex{position->x, position->y + size->h, size->w, size->h, color->color});
             // Sağ alt köşe
-            vertices.push_back(Vertex{position->x + w, position->y, w, h, color});
+            vertices.push_back(Vertex{position->x + size->w, position->y, size->w, size->h, color->color});
             // Sağ üst köşe
-            vertices.push_back(Vertex{position->x + w, position->y + h, w, h, color});
+            vertices.push_back(Vertex{position->x + size->w, position->y + size->h, size->w, size->h, color->color});
 
             unsigned int indices_offset = vertexCount * 4;
 
@@ -124,10 +123,10 @@ void Renderer::drawEntities(const std::vector<Entity>& entities) {
             indices.push_back(indices_offset + 2);
             indices.push_back(indices_offset + 3);
 
-            std::cout << "X: " << position->x << "Y: " << position->y << std::endl;
+            //std::cout << "X: " << position->x << "Y: " << position->y << std::endl;
 
             vertexCount++;
-        }
+        //}
     }
 
     draw();

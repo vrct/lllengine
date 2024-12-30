@@ -6,6 +6,8 @@
 #include "shader.h"
 #include "ecs/entity.h"
 #include "ecs/components/positioncomp.h"
+#include "ecs/components/sizecomp.h"
+#include "ecs/components/colorcomp.h"
 
 struct Vertex {
     float x,y;

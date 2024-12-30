@@ -8,6 +8,8 @@
 #include "ecs/entity.h"
 
 class PositionComp : public Component{
+    private:
+        unsigned int _id = Position;
     public:
       float x, y;
 
