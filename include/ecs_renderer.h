@@ -8,11 +8,13 @@
 #include "ecs/components/positioncomp.h"
 #include "ecs/components/sizecomp.h"
 #include "ecs/components/colorcomp.h"
+#include "ecs/components/texturecomp.h"
 
 struct Vertex {
     float x,y;
     float w,h;
     vec4 color;
+    float u, v;
 };
 
 class Renderer {

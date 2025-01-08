@@ -1,5 +1,9 @@
 #include "app.h"
 #include "ecs_renderer.h"
+#include "texture.h"
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 int app::start(int width, int height)
 {
@@ -26,9 +30,12 @@ int app::start(int width, int height)
 //region: gameoflifemethods
 
 struct lifeStruct {
-    static int m;
-    static int n;
-    int currState[50][50] = {0};
+    const int m;
+    const int n;
+    std::vector<std::vector<int>> currState;
+    //int currState[50][50] = {0};
+
+    lifeStruct(int row, int col) : m(row), n(col), currState(row, std::vector<int>(col, 0)) {}
 };
 
 struct mat3 {
@@ -47,64 +54,20 @@ const mat3 blinker = {
     0,1, 0
 };
 
-bool checkCell(lifeStruct& life, int x, int y) {
-    bool isAlive = true;
-
-    int neighbourCount = 0;
-
-    if (x - 1 > 0 && y - 1 > 0) {
-        neighbourCount +=
-            life.currState[x - 1][y - 1] +
-            life.currState[x][y - 1] +
-            life.currState[x - 1][y];
-    }
-
-    if (x + 1 < 50 && y + 1 < 50) {
-        neighbourCount +=
-            life.currState[x + 1][y] +
-            life.currState[x + 1][y + 1] +
-            life.currState[x][y + 1];
-    }
-
-    if (x - 1 > 0 && y + 1 < 50) {
-        neighbourCount +=
-            life.currState[x - 1][y + 1];
-    }
-
-    if (x + 1 < 50 && y - 1 > 0) {
-        neighbourCount +=
-            life.currState[x + 1][y - 1];
-    }
-
-    isAlive = !(neighbourCount < 2 || neighbourCount > 3);
-
-    return isAlive;
-}
-
 void updateLife(lifeStruct& life) {
-    //todo: check current cells update state
-    /*int updatedLife[50][50] = {0};
-    for (int i = 0; i < 50; i++) {
-        for (int j = 0; j < 50; j++) {
-            updatedLife[i][j] = checkCell(life, i, j) ? 1 : 0;
-        }
-    }
-
-    for (int i = 0; i < 50; i++) {
-        for (int j = 0; j < 50; j++) {
-            life.currState[i][j] = updatedLife[i][j];
-        }
-    }*/
-
-    int updatedLife[50][50] = {0};
+    //int updatedLife[50][50] = {0};
 
     std::vector<std::vector<int>> directions =
     {{0, 1}, {1, 0}, {0, -1},
      {-1, 0}, {1, 1}, {-1, -1},
      {1, -1}, {-1, 1}};
 
-    for (int i = 0; i < 50; i++) {
-        for (int j = 0; j < 50; j++) {
+    int rowCount = life.m;
+    int colCount = life.n;
+    std::vector<std::vector<int>> updatedLife(rowCount, std::vector<int>(colCount, 0));
+
+    for (int i = 0; i < rowCount; i++) {
+        for (int j = 0; j < colCount; j++) {
 
             // Count the number of live neighbors
             int live = 0;
@@ -113,7 +76,7 @@ void updateLife(lifeStruct& life) {
                 int y = j + dir[1];
 
                 // Check if the neighbor is live
-                if (x >= 0 && x < 50 && y >= 0 && y < 50 && (life.currState[x][y] == 1)) {
+                if (x >= 0 && x < rowCount && y >= 0 && y < colCount && (life.currState[x][y] == 1)) {
                     live++;
                 }
             }
@@ -138,167 +101,104 @@ void updateLife(lifeStruct& life) {
         }
     }
 
-    for (int i = 0; i < 50; i++) {
+    /*for (int i = 0; i < 50; i++) {
         for (int j = 0; j < 50; j++) {
             life.currState[i][j] = updatedLife[i][j];
         }
-    }
+    }*/
+
+    life.currState = updatedLife;
 }
 
-lifeStruct createLife(vec4 windowSize) {
+void createLife(lifeStruct* life, vec4 windowSize) {
     //todo: place glider random place
     //resetLife(life);
 
     //std::cout << life.m << " " << life.n << std::endl;
 
-    lifeStruct life;
-    // Alive hücrelerin (O) koordinatları
-    // Başlangıç noktası: Satır = 13, Sütun = 16
-
-    // 0. Satırdan itibaren
-    // life.currState[13][22] = 1;
-    // life.currState[13][23] = 1;
-    // life.currState[13][27] = 1;
-    // life.currState[13][28] = 1;
-    //
-    // life.currState[14][22] = 1;
-    // life.currState[14][23] = 1;
-    // life.currState[14][26] = 1;
-    // life.currState[14][28] = 1;
-    // life.currState[14][29] = 1;
-    // life.currState[14][30] = 1;
-    //
-    // life.currState[15][26] = 1;
-    // life.currState[15][30] = 1;
-    //
-    // life.currState[16][22] = 1;
-    // life.currState[16][23] = 1;
-    // life.currState[16][24] = 1;
-    // life.currState[16][25] = 1;
-    // life.currState[16][27] = 1;
-    // life.currState[16][28] = 1;
-    // life.currState[16][30] = 1;
-    //
-    // life.currState[17][22] = 1;
-    // life.currState[17][25] = 1;
-    // life.currState[17][27] = 1;
-    // life.currState[17][29] = 1;
-    // life.currState[17][31] = 1;
-    // life.currState[17][32] = 1;
-    //
-    // life.currState[18][25] = 1;
-    // life.currState[18][27] = 1;
-    // life.currState[18][29] = 1;
-    // life.currState[18][31] = 1;
-    //
-    // life.currState[19][26] = 1;
-    // life.currState[19][27] = 1;
-    // life.currState[19][29] = 1;
-    // life.currState[19][31] = 1;
-    //
-    // life.currState[20][30] = 1;
-    //
-    // life.currState[23][16] = 1;
-    // life.currState[23][17] = 1;
-    //
-    // life.currState[24][17] = 1;
-    // life.currState[24][24] = 1;
-    // life.currState[24][25] = 1;
-    //
-    // life.currState[25][17] = 1;
-    // life.currState[25][19] = 1;
-    // life.currState[25][20] = 1;
-    //
-    // life.currState[26][18] = 1;
-    // life.currState[26][20] = 1;
-    // life.currState[26][21] = 1;
-    // life.currState[26][23] = 1;
-    //
-    // life.currState[33][28] = 1;
-    // life.currState[33][29] = 1;
-    //
-    // life.currState[34][29] = 1;
-    // life.currState[34][20] = 1;
-    //
-    // life.currState[35][18] = 1;
-    // life.currState[35][20] = 1;
-    // life.currState[35][23] = 1;
-    //
-    // life.currState[36][19] = 1;
-    // life.currState[36][20] = 1;
-    // Rastgele başlangıç seti
-
     // Sol üstte bir glider
-    life.currState[2][3] = 1;
-    life.currState[3][4] = 1;
-    life.currState[4][2] = 1;
-    life.currState[4][3] = 1;
-    life.currState[4][4] = 1;
+    life->currState[2][3] = 1;
+    life->currState[3][4] = 1;
+    life->currState[4][2] = 1;
+    life->currState[4][3] = 1;
+    life->currState[4][4] = 1;
 
-    // OrcurrSa sol bir lightweight spaceship (LWSS)
-    life.currState[10][5] = 1;
-    life.currState[11][6] = 1;
-    life.currState[11][7] = 1;
-    life.currState[11][8] = 1;
-    life.currState[10][8] = 1;
-    life.currState[9][8] = 1;
-    life.currState[9][7] = 1;
+    // O->currSa sol bir lightweight spaceship (LWSS)
+    life->currState[10][5] = 1;
+    life->currState[11][6] = 1;
+    life->currState[11][7] = 1;
+    life->currState[11][8] = 1;
+    life->currState[10][8] = 1;
+    life->currState[9][8] = 1;
+    life->currState[9][7] = 1;
 
-    // OrcurrSada bir toad osilatör
-    life.currState[25][25] = 1;
-    life.currState[25][26] = 1;
-    life.currState[25][27] = 1;
-    life.currState[26][24] = 1;
-    life.currState[26][25] = 1;
-    life.currState[26][26] = 1;
+    // O->currSada bir toad osilatör
+    life->currState[25][25] = 1;
+    life->currState[25][26] = 1;
+    life->currState[25][27] = 1;
+    life->currState[26][24] = 1;
+    life->currState[26][25] = 1;
+    life->currState[26][26] = 1;
 
-    // SacurrS altta bir beacon
-    life.currState[40][40] = 1;
-    life.currState[40][41] = 1;
-    life.currState[41][40] = 1;
-    life.currState[41][41] = 1;
-    life.currState[42][42] = 1;
-    life.currState[42][43] = 1;
-    life.currState[43][42] = 1;
-    life.currState[43][43] = 1;
+    // S->currS altta bir beacon
+    life->currState[40][40] = 1;
+    life->currState[40][41] = 1;
+    life->currState[41][40] = 1;
+    life->currState[41][41] = 1;
+    life->currState[42][42] = 1;
+    life->currState[42][43] = 1;
+    life->currState[43][42] = 1;
+    life->currState[43][43] = 1;
 
-    // SacurrS üstte rastgele bir glider gun başlangıcı
-    life.currState[5][30] = 1;
-    life.currState[5][31] = 1;
-    life.currState[6][30] = 1;
-    life.currState[6][31] = 1;
-    life.currState[4][34] = 1;
-    life.currState[4][35] = 1;
-    life.currState[5][33] = 1;
-    life.currState[6][36] = 1;
-    life.currState[7][35] = 1;
-
-    return life;
+    // S->currS üstte rastgele bir glider gun başlangıcı
+    life->currState[5][30] = 1;
+    life->currState[5][31] = 1;
+    life->currState[6][30] = 1;
+    life->currState[6][31] = 1;
+    life->currState[4][34] = 1;
+    life->currState[4][35] = 1;
+    life->currState[5][33] = 1;
+    life->currState[6][36] = 1;
+    life->currState[7][35] = 1;
 }
 
+texture2D loadTexture(const char* filePath) {
+    texture2D texture;
+
+    int width, height, nrChannels;
+    unsigned char* data = stbi_load(filePath, &width, &height, &nrChannels, 0);
+    if (data) {
+        texture.generate(width, height, data);
+        stbi_image_free(data);
+    } else {
+        std::cout << "Failed to load texture: " << filePath << std::endl;
+    }
+
+    return texture;
+}
 
 //endregion
-
-void createEntitySquares(vec4 winSize, app& context) {
-    int squareWidth = 10;
-    int squareHeight = 10;
-    int hor_Count = winSize.x / squareWidth;
-    int vert_Count = winSize.y / squareHeight;
+void createEntitySquares(int w, int h, int hor_Count, int vert_Count, app& context) {
+    int squareWidth = w;
+    int squareHeight = h;
+    auto tex = loadTexture("resources/assets/container.jpg");
 
     for (int i = 0; i < hor_Count; i++)
     {
         for (int j = 0; j < vert_Count; j++)
         {
             Entity entity;
-            entity.addComponent<PositionComp>(Position, i*(float)squareWidth, j*(float)squareHeight);
+            entity.addComponent<PositionComp>(Position, i* (float)squareWidth, j*(float)squareHeight);
             entity.addComponent<SizeComp>(Size, (float)squareWidth, (float)squareHeight);
             entity.addComponent<ColorComp>(Color, vec4(1.0f, 1.0f, 1.0f, 1.0f));
+            entity.addComponent<TextureComp>(Texture, tex);
 
             context.addEntity(entity);
         }
     }
 }
-lifeStruct gof;
+
+lifeStruct* gof;
 int app::init()
 {
     //ourShader = Shader("resources/shaders/vertex.vert", "resources/shaders/fragment.frag");
@@ -308,9 +208,15 @@ int app::init()
     //Shader shader = Shader("resources/shaders/vertex.vert", "resources/shaders/fragment.frag");
     engine.ecs_renderer = new Renderer(*shader);
     engine.ecs_renderer->windowSize = windowSize;
-    createEntitySquares(windowSize, *this);
 
-    gof = createLife(windowSize);
+    int squareWidth = 40;
+    int squareHeight = 40;
+    int hor_Count = windowSize.x / squareWidth;
+    int vert_Count = windowSize.y / squareHeight;
+
+    gof = new lifeStruct(hor_Count, vert_Count);
+    createLife(gof, windowSize);
+    createEntitySquares(squareWidth, squareHeight, hor_Count, vert_Count, *this);
 
     //initSquare();
     //move to another method (camPos, camView, camZoom)
@@ -361,10 +267,10 @@ void app::update()
         SDL_Delay(1000.f / maxFPS - frameTicks);
     }
 
-    if(updateCount++ > 100)
+    if(updateCount++ > 50)
     {
         //SDL_Delay(1000.f / maxFPS - frameTicks);
-        //updateLife(gof);
+        updateLife(*gof);
         updateCount = 0;
     }
 
@@ -379,12 +285,12 @@ void app::update()
     float time = (startTicks2 / 1000.0f) * speed;
 
 
-    /*for (int i = 0; i < 50; i++) {
-        for (int j = 0; j < 50; j++) {
-            auto* color = entities[i*50 + j].getComponent<ColorComp>(Color);
-            color->color = gof.currState[i][j] ? vec4(0.0f, 1.0f, 0.0f, 1.0f) : vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    for (int i = 0; i < gof->m; i++) {
+        for (int j = 0; j < gof->n; j++) {
+            auto* color = entities[i*gof->m + j].getComponent<ColorComp>(Color);
+            color->color = gof->currState[i][j] ? vec4(1.0f, 1.0f, 1.0f, 1.0f) : vec4(0.0f, 0.0f, 0.0f, 0.7f);
         }
-    }*/
+    }
 
     //for (auto& entity : entities) {
         //auto* color = entity.getComponent<ColorComp>();
@@ -407,6 +313,8 @@ void app::draw()
     SDL_GL_SwapWindow(engine.getWindow());
     glClearColor(0.2f, 0.3f,0.3f,1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     engine.ecs_renderer->drawEntities(entities);
     engine.calculateFPS();
 }

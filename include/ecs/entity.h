@@ -15,6 +15,7 @@ enum ComponentType {
     Position = 0,
     Size = 1,
     Color = 2,
+    Texture = 3
 };
 
 class Component {

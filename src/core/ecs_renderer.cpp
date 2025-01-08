@@ -34,6 +34,9 @@ void Renderer::initBuffers()
     glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(4 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
+    glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(8 * sizeof(float)));
+    glEnableVertexAttribArray(3);
+
     const unsigned int indices[] = {
         0, 1, 3, // İlk üçgen
         0, 3, 2  // İkinci üçgen
@@ -101,18 +104,31 @@ void Renderer::updateBuffers()
 void Renderer::drawEntities(const std::vector<Entity>& entities) {
     vertices.clear();
 
+    glEnable(GL_BLEND);
+    shader.use();
+    shader.setVec4("windowSize", windowSize);
+
     for (const auto& entity : entities) {
         auto* position = entity.getComponent<PositionComp>(Position);
         auto* size = entity.getComponent<SizeComp>(Size);
         auto* color = entity.getComponent<ColorComp>(Color);
+        auto* texture = entity.getComponent<TextureComp>(Texture);
+
         //if (position && size && color) {
-            vertices.push_back(Vertex{position->x, position->y, size->w, size->h, color->color});
+            if (texture) {
+                shader.setBool("hasTexture", GL_TRUE);
+                texture->texture.bind();
+            } else {
+                shader.setBool("hasTexture", GL_FALSE);
+                glBindTexture(GL_TEXTURE_2D, 0);
+            }
+            vertices.push_back(Vertex{position->x, position->y, size->w, size->h, color->color, 0,0});
             // Sol üst köşe
-            vertices.push_back(Vertex{position->x, position->y + size->h, size->w, size->h, color->color});
+            vertices.push_back(Vertex{position->x, position->y + size->h, size->w, size->h, color->color, 1,0});
             // Sağ alt köşe
-            vertices.push_back(Vertex{position->x + size->w, position->y, size->w, size->h, color->color});
+            vertices.push_back(Vertex{position->x + size->w, position->y, size->w, size->h, color->color, 0,1});
             // Sağ üst köşe
-            vertices.push_back(Vertex{position->x + size->w, position->y + size->h, size->w, size->h, color->color});
+            vertices.push_back(Vertex{position->x + size->w, position->y + size->h, size->w, size->h, color->color, 1, 1});
 
             unsigned int indices_offset = vertexCount * 4;
 
@@ -136,8 +152,6 @@ void Renderer::draw()
 {
     if(vertexCount == 0) return;
 
-    shader.use();
-    shader.setVec4("windowSize", windowSize);
 
     updateBuffers();
 
