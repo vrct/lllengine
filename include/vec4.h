@@ -170,6 +170,15 @@ struct vec4
         return *this;
     }
 
+    bool operator!= (vec4 const& val) const {
+        bool result =   x == val.x &&
+                        y == val.y &&
+                        z == val.z;
+                        //w == val.w;
+
+        return result;
+    }
+
 
     const GLfloat* data() const {
         return elements;

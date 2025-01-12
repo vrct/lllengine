@@ -11,9 +11,18 @@
 
 class TextureComp : public Component{
     public:
-      texture2D texture;
+    texture2D texture;
 
-      TextureComp(texture2D texture) : texture(texture){}
+    TextureComp(texture2D texture) : texture(texture){}
+
+    void updateValue(unsigned int value) {
+        if (value != texture.id) {
+            //todo: test here
+            texture.id = value;
+            incrementVersion();
+        }
+    }
+
 };
 
 #endif //TEXTURECOMP_H

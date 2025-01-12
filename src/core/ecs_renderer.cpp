@@ -43,6 +43,7 @@ void Renderer::initBuffers()
     };
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, maxVertices * sizeof(unsigned int), NULL, GL_DYNAMIC_DRAW);
     //glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     glBindVertexArray(0);
@@ -92,7 +93,7 @@ void Renderer::updateBuffers()
     glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(Vertex), vertices.data());
 
     glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, EBO );
-    glBufferData( GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(float) * 6, indices.data(), GL_DYNAMIC_DRAW );
+    glBufferSubData( GL_ELEMENT_ARRAY_BUFFER,0, indices.size() * sizeof(unsigned int), indices.data());
 
     GLenum error = glGetError();
     if (error != GL_NO_ERROR) {
@@ -102,13 +103,17 @@ void Renderer::updateBuffers()
 
 
 void Renderer::drawEntities(const std::vector<Entity>& entities) {
-    vertices.clear();
+    std::vector<Vertex> updatedVertices;
+    std::vector<unsigned int> updatedIndices;
+    unsigned int localVertexCount = 0;
 
-    glEnable(GL_BLEND);
+    //vertices.clear();
+
     shader.use();
     shader.setVec4("windowSize", windowSize);
 
     for (const auto& entity : entities) {
+        if (!entity.isDirty()) continue;
         auto* position = entity.getComponent<PositionComp>(Position);
         auto* size = entity.getComponent<SizeComp>(Size);
         auto* color = entity.getComponent<ColorComp>(Color);
@@ -122,30 +127,54 @@ void Renderer::drawEntities(const std::vector<Entity>& entities) {
                 shader.setBool("hasTexture", GL_FALSE);
                 glBindTexture(GL_TEXTURE_2D, 0);
             }
-            vertices.push_back(Vertex{position->x, position->y, size->w, size->h, color->color, 0,0});
+            updatedVertices.push_back(Vertex{position->x, position->y, size->w, size->h, color->color, 0,0});
             // Sol üst köşe
-            vertices.push_back(Vertex{position->x, position->y + size->h, size->w, size->h, color->color, 1,0});
+            updatedVertices.push_back(Vertex{position->x, position->y + size->h, size->w, size->h, color->color, 1,0});
             // Sağ alt köşe
-            vertices.push_back(Vertex{position->x + size->w, position->y, size->w, size->h, color->color, 0,1});
+            updatedVertices.push_back(Vertex{position->x + size->w, position->y, size->w, size->h, color->color, 0,1});
             // Sağ üst köşe
-            vertices.push_back(Vertex{position->x + size->w, position->y + size->h, size->w, size->h, color->color, 1, 1});
+            updatedVertices.push_back(Vertex{position->x + size->w, position->y + size->h, size->w, size->h, color->color, 1, 1});
 
-            unsigned int indices_offset = vertexCount * 4;
+            unsigned int indices_offset = localVertexCount * 4;
 
-            indices.push_back(indices_offset);
-            indices.push_back(indices_offset + 1);
-            indices.push_back(indices_offset + 2);
-            indices.push_back(indices_offset + 1);
-            indices.push_back(indices_offset + 2);
-            indices.push_back(indices_offset + 3);
+            updatedIndices.push_back(indices_offset);
+            updatedIndices.push_back(indices_offset + 1);
+            updatedIndices.push_back(indices_offset + 2);
+            updatedIndices.push_back(indices_offset + 1);
+            updatedIndices.push_back(indices_offset + 2);
+            updatedIndices.push_back(indices_offset + 3);
 
             //std::cout << "X: " << position->x << "Y: " << position->y << std::endl;
 
-            vertexCount++;
+            localVertexCount++;
+            entity.updateCachedVersion();
         //}
     }
 
-    draw();
+    //draw();
+    if(localVertexCount == 0) return;
+
+    //updateBuffers();
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, updatedVertices.size() * sizeof(Vertex), updatedVertices.data());
+
+    glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, EBO );
+    glBufferSubData( GL_ELEMENT_ARRAY_BUFFER,0, updatedIndices.size() * sizeof(unsigned int), updatedIndices.data());
+
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR) {
+        std::cerr << "OpenGL Error in updateBuffer: " << error << std::endl;
+    }
+
+    //shader.setVec4("windowSize", vec4(640,360));
+
+    glBindVertexArray(VAO);
+
+    //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, updatedIndices.size(), GL_UNSIGNED_INT, nullptr);
+    glBindVertexArray(0);
+
+    clear();
 }
 
 void Renderer::draw()
