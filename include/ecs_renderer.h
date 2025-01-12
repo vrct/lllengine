@@ -26,7 +26,7 @@ class Renderer {
         vec4 windowSize;
         void pushVertex(const Vertex& vertex);
         void draw();
-        void drawEntities(const std::vector<Entity>& entities);
+        void drawEntities(std::vector<Entity>& entities);
         void clear();
 
     private:
@@ -39,6 +39,8 @@ class Renderer {
 
         void initBuffers();
         void updateBuffers();
+        void addEntities(Entity& entity);
+        void updateEntitiesVertices(Entity& entity, unsigned int verticeOffset);
 };
 
 

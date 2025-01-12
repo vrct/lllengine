@@ -124,42 +124,42 @@ void createLife(lifeStruct* life, vec4 windowSize) {
     life->currState[4][4] = 1;
 
     // O->currSa sol bir lightweight spaceship (LWSS)
-    // life->currState[10][5] = 1;
-    // life->currState[11][6] = 1;
-    // life->currState[11][7] = 1;
-    // life->currState[11][8] = 1;
-    // life->currState[10][8] = 1;
-    // life->currState[9][8] = 1;
-    // life->currState[9][7] = 1;
-    //
-    // // O->currSada bir toad osilatör
-    // life->currState[25][25] = 1;
-    // life->currState[25][26] = 1;
-    // life->currState[25][27] = 1;
-    // life->currState[26][24] = 1;
-    // life->currState[26][25] = 1;
-    // life->currState[26][26] = 1;
-    //
-    // // S->currS altta bir beacon
-    // life->currState[40][40] = 1;
-    // life->currState[40][41] = 1;
-    // life->currState[41][40] = 1;
-    // life->currState[41][41] = 1;
-    // life->currState[42][42] = 1;
-    // life->currState[42][43] = 1;
-    // life->currState[43][42] = 1;
-    // life->currState[43][43] = 1;
-    //
-    // // S->currS üstte rastgele bir glider gun başlangıcı
-    // life->currState[5][30] = 1;
-    // life->currState[5][31] = 1;
-    // life->currState[6][30] = 1;
-    // life->currState[6][31] = 1;
-    // life->currState[4][34] = 1;
-    // life->currState[4][35] = 1;
-    // life->currState[5][33] = 1;
-    // life->currState[6][36] = 1;
-    // life->currState[7][35] = 1;
+    life->currState[10][5] = 1;
+    life->currState[11][6] = 1;
+    life->currState[11][7] = 1;
+    life->currState[11][8] = 1;
+    life->currState[10][8] = 1;
+    life->currState[9][8] = 1;
+    life->currState[9][7] = 1;
+
+    // O->currSada bir toad osilatör
+    life->currState[25][25] = 1;
+    life->currState[25][26] = 1;
+    life->currState[25][27] = 1;
+    life->currState[26][24] = 1;
+    life->currState[26][25] = 1;
+    life->currState[26][26] = 1;
+
+    // S->currS altta bir beacon
+    life->currState[40][40] = 1;
+    life->currState[40][41] = 1;
+    life->currState[41][40] = 1;
+    life->currState[41][41] = 1;
+    life->currState[42][42] = 1;
+    life->currState[42][43] = 1;
+    life->currState[43][42] = 1;
+    life->currState[43][43] = 1;
+
+    // S->currS üstte rastgele bir glider gun başlangıcı
+    life->currState[5][30] = 1;
+    life->currState[5][31] = 1;
+    life->currState[6][30] = 1;
+    life->currState[6][31] = 1;
+    life->currState[4][34] = 1;
+    life->currState[4][35] = 1;
+    life->currState[5][33] = 1;
+    life->currState[6][36] = 1;
+    life->currState[7][35] = 1;
 }
 
 texture2D loadTexture(const char* filePath) {
@@ -209,8 +209,8 @@ int app::init()
     engine.ecs_renderer = new Renderer(*shader);
     engine.ecs_renderer->windowSize = windowSize;
 
-    int squareWidth = 50;
-    int squareHeight = 50;
+    int squareWidth = 10;
+    int squareHeight = 10;
     int hor_Count = windowSize.x / squareWidth;
     int vert_Count = windowSize.y / squareHeight;
 

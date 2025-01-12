@@ -1,5 +1,7 @@
 #include "ecs_renderer.h"
 
+#include <renderer.h>
+
 Renderer::Renderer(Shader& s) : shader(s), vertexCount(0)
 {
     initBuffers();
@@ -101,65 +103,156 @@ void Renderer::updateBuffers()
     }
 }
 
+void Renderer::updateEntitiesVertices(Entity &entity, unsigned int verticeOffset) {
+    auto* position = entity.getComponent<PositionComp>(Position);
+    auto* size = entity.getComponent<SizeComp>(Size);
+    auto* color = entity.getComponent<ColorComp>(Color);
 
-void Renderer::drawEntities(const std::vector<Entity>& entities) {
-    std::vector<Vertex> updatedVertices;
-    std::vector<unsigned int> updatedIndices;
-    unsigned int localVertexCount = 0;
+    //todo: add texture check auch
+    if (!position || !size || !color) return;
+
+    vertices[verticeOffset] = Vertex{position->x, position->y, size->w, size->h, color->color, 0,0};
+    vertices[verticeOffset + 1] = Vertex{position->x, position->y + size->h, size->w, size->h, color->color, 1,0};
+    vertices[verticeOffset + 2] = Vertex{position->x + size->w, position->y, size->w, size->h, color->color, 0,1};
+    vertices[verticeOffset + 3] = Vertex{position->x + size->w, position->y + size->h, size->w, size->h, color->color, 1, 1};
+
+    unsigned int byteOffset = verticeOffset * sizeof(Vertex);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferSubData(GL_ARRAY_BUFFER, byteOffset, 4 * sizeof(Vertex), &vertices[verticeOffset]);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+
+void Renderer::addEntities(Entity& entity) {
+    auto* position = entity.getComponent<PositionComp>(Position);
+    auto* size = entity.getComponent<SizeComp>(Size);
+    auto* color = entity.getComponent<ColorComp>(Color);
+    auto* texture = entity.getComponent<TextureComp>(Texture);
+
+    if (!position || !size || !color) return;
+
+    unsigned int vertexStartIndex  = vertices.size();
+
+    if (texture) {
+        shader.setBool("hasTexture", GL_TRUE);
+        texture->texture.bind();
+    } else {
+        shader.setBool("hasTexture", GL_FALSE);
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+    vertices.push_back(Vertex{position->x, position->y, size->w, size->h, color->color, 0,0});
+    // Sol üst köşe
+    vertices.push_back(Vertex{position->x, position->y + size->h, size->w, size->h, color->color, 1,0});
+    // Sağ alt köşe
+    vertices.push_back(Vertex{position->x + size->w, position->y, size->w, size->h, color->color, 0,1});
+    // Sağ üst köşe
+    vertices.push_back(Vertex{position->x + size->w, position->y + size->h, size->w, size->h, color->color, 1, 1});
+
+    //unsigned int indices_offset = vertexCount * 4;
+    //todo: check calculation here
+    unsigned int indices_offset = vertexStartIndex;
+
+    indices.push_back(indices_offset);
+    indices.push_back(indices_offset + 1);
+    indices.push_back(indices_offset + 2);
+    indices.push_back(indices_offset + 1);
+    indices.push_back(indices_offset + 2);
+    indices.push_back(indices_offset + 3);
+
+    entity.setVertexOffset(vertexStartIndex);
+    entity.setIndicesOffset(indices.size() - 6);
+
+    vertexCount += 4;
+}
+
+
+void Renderer::drawEntities(std::vector<Entity>& entities) {
+
+    if (vertexCount == 0) {
+        std::cerr << "No vertex buffer created" << std::endl;
+        vertices.clear();
+        indices.clear();
+
+        for (auto& entity : entities) {addEntities(entity);}
+
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        //glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(Vertex), vertices.data());
+        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_DYNAMIC_DRAW);
+
+        glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, EBO );
+        //glBufferSubData( GL_ELEMENT_ARRAY_BUFFER,0, indices.size() * sizeof(unsigned int), indices.data());
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_DYNAMIC_DRAW);
+
+        return;
+    }
+
+    int counter = 0;
+    for (auto& entity : entities) {
+        if (entity.isDirty()) {
+            counter++;
+            //std::cout << "ENTITY IS DIRTY UPDATED " << counter << std::endl;
+            updateEntitiesVertices(entity, entity.getVertexOffset());
+            entity.updateCachedVersion();
+        }
+    }
+
+    // std::vector<Vertex> updatedVertices;
+    // std::vector<unsigned int> updatedIndices;
+    // unsigned int localVertexCount = 0;
 
     //vertices.clear();
 
     shader.use();
     shader.setVec4("windowSize", windowSize);
 
-    for (const auto& entity : entities) {
-        if (!entity.isDirty()) continue;
-        auto* position = entity.getComponent<PositionComp>(Position);
-        auto* size = entity.getComponent<SizeComp>(Size);
-        auto* color = entity.getComponent<ColorComp>(Color);
-        auto* texture = entity.getComponent<TextureComp>(Texture);
-
-        //if (position && size && color) {
-            if (texture) {
-                shader.setBool("hasTexture", GL_TRUE);
-                texture->texture.bind();
-            } else {
-                shader.setBool("hasTexture", GL_FALSE);
-                glBindTexture(GL_TEXTURE_2D, 0);
-            }
-            updatedVertices.push_back(Vertex{position->x, position->y, size->w, size->h, color->color, 0,0});
-            // Sol üst köşe
-            updatedVertices.push_back(Vertex{position->x, position->y + size->h, size->w, size->h, color->color, 1,0});
-            // Sağ alt köşe
-            updatedVertices.push_back(Vertex{position->x + size->w, position->y, size->w, size->h, color->color, 0,1});
-            // Sağ üst köşe
-            updatedVertices.push_back(Vertex{position->x + size->w, position->y + size->h, size->w, size->h, color->color, 1, 1});
-
-            unsigned int indices_offset = localVertexCount * 4;
-
-            updatedIndices.push_back(indices_offset);
-            updatedIndices.push_back(indices_offset + 1);
-            updatedIndices.push_back(indices_offset + 2);
-            updatedIndices.push_back(indices_offset + 1);
-            updatedIndices.push_back(indices_offset + 2);
-            updatedIndices.push_back(indices_offset + 3);
-
-            //std::cout << "X: " << position->x << "Y: " << position->y << std::endl;
-
-            localVertexCount++;
-            entity.updateCachedVersion();
-        //}
-    }
+    // for (const auto& entity : entities) {
+    //     if (!entity.isDirty()) continue;
+    //     auto* position = entity.getComponent<PositionComp>(Position);
+    //     auto* size = entity.getComponent<SizeComp>(Size);
+    //     auto* color = entity.getComponent<ColorComp>(Color);
+    //     auto* texture = entity.getComponent<TextureComp>(Texture);
+    //
+    //     //if (position && size && color) {
+    //         if (texture) {
+    //             shader.setBool("hasTexture", GL_TRUE);
+    //             texture->texture.bind();
+    //         } else {
+    //             shader.setBool("hasTexture", GL_FALSE);
+    //             glBindTexture(GL_TEXTURE_2D, 0);
+    //         }
+    //         updatedVertices.push_back(Vertex{position->x, position->y, size->w, size->h, color->color, 0,0});
+    //         // Sol üst köşe
+    //         updatedVertices.push_back(Vertex{position->x, position->y + size->h, size->w, size->h, color->color, 1,0});
+    //         // Sağ alt köşe
+    //         updatedVertices.push_back(Vertex{position->x + size->w, position->y, size->w, size->h, color->color, 0,1});
+    //         // Sağ üst köşe
+    //         updatedVertices.push_back(Vertex{position->x + size->w, position->y + size->h, size->w, size->h, color->color, 1, 1});
+    //
+    //         unsigned int indices_offset = localVertexCount * 4;
+    //
+    //         updatedIndices.push_back(indices_offset);
+    //         updatedIndices.push_back(indices_offset + 1);
+    //         updatedIndices.push_back(indices_offset + 2);
+    //         updatedIndices.push_back(indices_offset + 1);
+    //         updatedIndices.push_back(indices_offset + 2);
+    //         updatedIndices.push_back(indices_offset + 3);
+    //
+    //         //std::cout << "X: " << position->x << "Y: " << position->y << std::endl;
+    //
+    //         localVertexCount++;
+    //         entity.updateCachedVersion();
+    //     //}
+    // }
 
     //draw();
-    if(localVertexCount == 0) return;
-
-    //updateBuffers();
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, updatedVertices.size() * sizeof(Vertex), updatedVertices.data());
-
-    glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, EBO );
-    glBufferSubData( GL_ELEMENT_ARRAY_BUFFER,0, updatedIndices.size() * sizeof(unsigned int), updatedIndices.data());
+    // if(localVertexCount == 0) return;
+    //
+    // //updateBuffers();
+    // glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    // glBufferSubData(GL_ARRAY_BUFFER, 0, updatedVertices.size() * sizeof(Vertex), updatedVertices.data());
+    //
+    // glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, EBO );
+    // glBufferSubData( GL_ELEMENT_ARRAY_BUFFER,0, updatedIndices.size() * sizeof(unsigned int), updatedIndices.data());
 
     GLenum error = glGetError();
     if (error != GL_NO_ERROR) {
@@ -171,10 +264,11 @@ void Renderer::drawEntities(const std::vector<Entity>& entities) {
     glBindVertexArray(VAO);
 
     //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-    glDrawElements(GL_TRIANGLES, updatedIndices.size(), GL_UNSIGNED_INT, nullptr);
+    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
 
-    clear();
+    //todo: nachdem unterschied wechsel hier
+    //clear();
 }
 
 void Renderer::draw()

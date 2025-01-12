@@ -43,6 +43,8 @@ private:
     mutable unsigned int _cachedVersion = -1;
     unsigned int compData;
     std::map<int, std::shared_ptr<Component>> componentsMap;
+    unsigned int vertexOffset;
+    unsigned int indiceOffset;
 
 public:
     //todo: change idCounter here
@@ -73,6 +75,11 @@ public:
         //
         // return false;
     }
+
+    unsigned int getVertexOffset() const {return vertexOffset;}
+    unsigned int getIndicesOffset() const {return indiceOffset;}
+    void setVertexOffset(unsigned int offset) { vertexOffset = offset; }
+    void setIndicesOffset(unsigned int offset) { indiceOffset = offset; }
 
     bool hasComponent(const ComponentType c) const {
         return compData & (1 << c);
