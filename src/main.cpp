@@ -5,7 +5,7 @@ app game_app;
 int main()
 {
     printf("INIT SUCCESSSSSSSSSS 2 ");
-    int success = game_app.start(500, 500);
+    int success = game_app.start(1000, 1000);
     if(success)
     {
         printf("INITIALIZE FAILED");

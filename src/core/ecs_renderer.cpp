@@ -167,6 +167,8 @@ void Renderer::addEntities(Entity& entity) {
 
 
 void Renderer::drawEntities(std::vector<Entity>& entities) {
+    shader.use();
+    shader.setVec4("windowSize", windowSize);
 
     if (vertexCount == 0) {
         std::cerr << "No vertex buffer created" << std::endl;
@@ -202,8 +204,6 @@ void Renderer::drawEntities(std::vector<Entity>& entities) {
 
     //vertices.clear();
 
-    shader.use();
-    shader.setVec4("windowSize", windowSize);
 
     // for (const auto& entity : entities) {
     //     if (!entity.isDirty()) continue;
