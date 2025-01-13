@@ -11,11 +11,11 @@
 #include "string"
 
 enum ComponentType {
-    None,
-    Position = 0,
-    Size = 1,
-    Color = 2,
-    Texture = 3
+    None = 0,
+    Position = 1,
+    Size = 2,
+    Color = 3,
+    Texture = 4
 };
 
 class Component {
@@ -40,8 +40,8 @@ private:
     unsigned int id;
     //todo: change here to something clever not ordered
     static unsigned int idCounter;
-    mutable unsigned int _cachedVersion = -1;
     unsigned int compData;
+    mutable unsigned int _cachedVersion = -1;
     std::map<int, std::shared_ptr<Component>> componentsMap;
     unsigned int vertexOffset;
     unsigned int indiceOffset;

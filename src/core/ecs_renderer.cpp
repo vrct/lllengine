@@ -133,13 +133,14 @@ void Renderer::addEntities(Entity& entity) {
 
     unsigned int vertexStartIndex  = vertices.size();
 
-    if (texture) {
-        shader.setBool("hasTexture", GL_TRUE);
-        texture->texture.bind();
-    } else {
+    if (!texture) {
         shader.setBool("hasTexture", GL_FALSE);
         glBindTexture(GL_TEXTURE_2D, 0);
+    } else {
+        shader.setBool("hasTexture", GL_TRUE);
+        texture->texture.bind();
     }
+
     vertices.push_back(Vertex{position->x, position->y, size->w, size->h, color->color, 0,0});
     // Sol üst köşe
     vertices.push_back(Vertex{position->x, position->y + size->h, size->w, size->h, color->color, 1,0});
