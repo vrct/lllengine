@@ -3,6 +3,7 @@
 
 #include "lll.h"
 #include "ecs/entity.h"
+#include "ecs/systems/gravitySystem.h"
 #include "ecs/systems/renderSystem.h"
 //#include "camera.h"
 
@@ -23,6 +24,7 @@ class app
         const float maxFPS { 900.0f};
         const double PI  { atan(1) * 4 };
         Shader ourShader;
+        gravitySystem gravitySystem;
         //Camera cam;
     /*
         todo: appname, bundleid, maxfps vs. info about game

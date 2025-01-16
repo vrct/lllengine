@@ -1,3 +1,5 @@
+#if ASDASD_GOF
+
 #include "app.h"
 #include "ecs_renderer.h"
 #include "texture.h"
@@ -332,3 +334,4 @@ int app::kill()
     SDL_Quit();
     return EXIT_FAILURE;
 }
+#endif

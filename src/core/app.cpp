@@ -73,8 +73,8 @@ int app::init()
     engine.ecs_renderer = new Renderer(*shader);
     engine.ecs_renderer->windowSize = windowSize;
 
-    int squareWidth = 30;
-    int squareHeight = 30;
+    int squareWidth = 3;
+    int squareHeight = 3;
     int hor_Count = windowSize.x / squareWidth;
     int vert_Count = windowSize.y / squareHeight;
 
@@ -86,6 +86,10 @@ int app::init()
 
     return EXIT_SUCCESS;
 }
+
+bool mouseLeftClicked;
+bool mouseRightClicked;
+vec4 mousePos;
 
 //todo: if needed return event and process later !!!!!!!!
 void app::pollEvents()
@@ -100,7 +104,6 @@ void app::pollEvents()
                 if(e.type == SDL_KEYUP && e.key.keysym.sym != SDLK_ESCAPE) break;
                 quit = true;
                 break;
-
             case SDL_KEYDOWN:
                 if(e.key.keysym.sym != SDLK_a) break;
                 break;
@@ -111,12 +114,26 @@ void app::pollEvents()
                     //todo: rendersystem square pass new window size
                 }
                 break;
+            case SDL_MOUSEBUTTONDOWN:
+            case SDL_MOUSEMOTION:
+                if (e.button.button == SDL_BUTTON_LEFT) {
+                    //std::cout << "Left button pressed " << e.button.x << " " <<  e.button.y << std::endl;
+                    mouseLeftClicked = true;
+                    mousePos = vec4(e.button.x, engine.getWindowSize().y -  e.button.y, 0.0f, 1.0f);
+                }else if (e.button.button == SDL_BUTTON_RIGHT) {
+                    mouseRightClicked = true;
+                }
+                break;
+            case SDL_MOUSEBUTTONUP:
+                mouseLeftClicked = false;
+                break;
         }
     }
 }
 
 double startTicks2 = 0;
 int updateCount;
+
 
 //physics or data updates in here
 void app::update()
@@ -131,16 +148,35 @@ void app::update()
 
     vec4 winSize = engine.getWindowSize();
 
-    int squareWidth = 50;
-    int squareHeight = 50;
+    int squareWidth = 4;
+    int squareHeight = 4;
     int hor_Count = winSize.x / squareWidth;
     int vert_Count = winSize.y / squareHeight;
 
     float speed = 1.0f;
     float time = (startTicks2 / 1000.0f) * speed;
 
+    if (mouseLeftClicked) {
+        //todo: change here
+        mouseLeftClicked = false;
+        // Entity entity;
+        // entity.addComponent<PositionComp>(Position, mousePos.x, mousePos.y);
+        // entity.addComponent<SizeComp>(Size, (float)squareWidth, (float)squareHeight);
+        // entity.addComponent<ColorComp>(Color, vec4(1.0f, 1.0f, 1.0f, 1.0f));
+        // //entity.addComponent<TextureComp>(Texture, tex);
+        // //entity.makeDirty();
+        //
+        // //gravitySystem.addEntity(entity);
+        // addEntity(entity);
+    }
+
+
+
+
     for (auto& entity : entities) {
         auto* color = entity.getComponent<ColorComp>(Color);
+        auto* position = entity.getComponent<PositionComp>(Position);
+        auto* size = entity.getComponent<SizeComp>(Size);
         /*float gradientX = position->x / float(hor_Count);  // 0.0 → 1.0 (soldan sağa)
         float gradientY = position->y / float(vert_Count); // 0.0 → 1.0 (aşağıdan yukarıya)
 
@@ -148,9 +184,13 @@ void app::update()
         float red   = 0.5f + 0.5f * cos(time + gradientX * M_PI);        // R bileşeni
         float green = 0.5f + 0.5f * sin(time + gradientY * M_PI);        // G bileşeni
         float blue  = 0.5f + 0.5f * sin(time + gradientX * M_PI * 0.5f);*/
-        //vec4 color2 = vec4((255 / hor_Count) * position->x / 250.0f, (255 / vert_Count) * position->y / 250.0f, fabs(sin((startTicks2 / 1000) * PI)));
+        vec4 color2 = vec4((255.0f / (float)hor_Count) * position->x / 125.0f, (255.0f / (float)vert_Count) * position->y / 125.0f, fabs(sin((startTicks2 / 1000) * PI)));
         //color->color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
-        color->updateValue(vec4(1.0f, 0.0f, 1.0f, 0.1f));
+        // if (mouseClicked && mousePos.x > position->x && mousePos.x <= position->x + size->w && mousePos.y > position->y && mousePos.y <= position->y + size->h) {
+        color->updateValue(color2);
+        // }
+
+        //position->updateValue(position->x, position->y - 0.1f);
     }
 }
 
@@ -163,7 +203,17 @@ void app::draw()
     glClear(GL_COLOR_BUFFER_BIT);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    engine.ecs_renderer->drawEntities(entities);
+    //gravitySystem.update(1);
+    engine.ecs_renderer->drawEntities(entities, startTicks2);
+
+
+    // if (mouseRightClicked) {
+    //     mouseRightClicked = false;
+    //     //todo: remove first entity added and move last entity to that place
+    //     gravitySystem.update(10);
+    // }
+
+
     engine.calculateFPS();
 }
 

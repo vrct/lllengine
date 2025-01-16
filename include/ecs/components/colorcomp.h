@@ -16,14 +16,8 @@ class ColorComp : public Component{
 
     void updateValue(vec4 updatedColor){
           if (!(updatedColor != color)){
-          //if (updatedColor != color) {
-              std::cout << "Updating color component" << updatedColor - color <<  std::endl;
+              //std::cout << "Updating color component" << updatedColor - color <<  std::endl;
               color = updatedColor;
-              // color.x = updatedColor.x;
-              // color.y = updatedColor.y;
-              // color.z = updatedColor.z;
-              // color.w = updatedColor.w;
-              //color = updatedColor;
               incrementVersion(); // Versiyonu artır
           }
       }

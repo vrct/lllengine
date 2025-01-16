@@ -65,6 +65,9 @@ public:
         _cachedVersion = getUpdatedVersion();
     }
 
+    //todo: delete afterwards
+    void makeDirty() const {_cachedVersion = -1;}
+
     bool isDirty() const {
         return getUpdatedVersion() != _cachedVersion;
         // unsigned int currentVersion = getUpdatedVersion();

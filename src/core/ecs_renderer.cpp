@@ -109,7 +109,7 @@ void Renderer::updateEntitiesVertices(Entity &entity, unsigned int verticeOffset
     auto* color = entity.getComponent<ColorComp>(Color);
 
     //todo: add texture check auch
-    if (!position || !size || !color) return;
+    //if (!position || !size || !color) return;
 
     vertices[verticeOffset] = Vertex{position->x, position->y, size->w, size->h, color->color, 0,0};
     vertices[verticeOffset + 1] = Vertex{position->x, position->y + size->h, size->w, size->h, color->color, 1,0};
@@ -117,10 +117,33 @@ void Renderer::updateEntitiesVertices(Entity &entity, unsigned int verticeOffset
     vertices[verticeOffset + 3] = Vertex{position->x + size->w, position->y + size->h, size->w, size->h, color->color, 1, 1};
 
     unsigned int byteOffset = verticeOffset * sizeof(Vertex);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferSubData(GL_ARRAY_BUFFER, byteOffset, 4 * sizeof(Vertex), &vertices[verticeOffset]);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    //todo: open here after testing
+    // glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    // glBufferSubData(GL_ARRAY_BUFFER, byteOffset, 4 * sizeof(Vertex), &vertices[verticeOffset]);
+    // glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
+
+std::vector<Vertex> Renderer::updateEntitiesVerticesV(Entity &entity, unsigned int verticeOffset) {
+    auto* position = entity.getComponent<PositionComp>(Position);
+    auto* size = entity.getComponent<SizeComp>(Size);
+    auto* color = entity.getComponent<ColorComp>(Color);
+
+    //todo: add texture check auch
+    //if (!position || !size || !color) return;
+
+    vertices[verticeOffset] = Vertex{position->x, position->y, size->w, size->h, color->color, 0,0};
+    vertices[verticeOffset + 1] = Vertex{position->x, position->y + size->h, size->w, size->h, color->color, 1,0};
+    vertices[verticeOffset + 2] = Vertex{position->x + size->w, position->y, size->w, size->h, color->color, 0,1};
+    vertices[verticeOffset + 3] = Vertex{position->x + size->w, position->y + size->h, size->w, size->h, color->color, 1, 1};
+
+    return std::vector<Vertex>{vertices[verticeOffset], vertices[verticeOffset + 1], vertices[verticeOffset + 2], vertices[verticeOffset + 3]};
+}
+
+
+void Renderer::removeEntities(Entity &entity) {
+    //todo: remove entity method add
+}
+
 
 
 void Renderer::addEntities(Entity& entity) {
@@ -151,7 +174,8 @@ void Renderer::addEntities(Entity& entity) {
 
     //unsigned int indices_offset = vertexCount * 4;
     //todo: check calculation here
-    unsigned int indices_offset = vertexStartIndex;
+    //unsigned int indices_offset = vertexStartIndex;
+    unsigned int indices_offset = vertexCount;
 
     indices.push_back(indices_offset);
     indices.push_back(indices_offset + 1);
@@ -166,38 +190,127 @@ void Renderer::addEntities(Entity& entity) {
     vertexCount += 4;
 }
 
-
-void Renderer::drawEntities(std::vector<Entity>& entities) {
+unsigned int lastEntityCount;
+void Renderer::drawEntities(std::vector<Entity>& entities, const float deltaTime) {
     shader.use();
     shader.setVec4("windowSize", windowSize);
+    shader.setBool("gravityActive", true);
+    shader.setFloat("gravityDeltaTime", deltaTime);
 
-    if (vertexCount == 0) {
-        std::cerr << "No vertex buffer created" << std::endl;
-        vertices.clear();
-        indices.clear();
+    if (vertexCount == 0 || lastEntityCount != entities.size()) {
+        //todo: change here make it clever later
+        //lastEntityCount = entities.size();
+        //std::cerr << "No vertex buffer created" << std::endl;
+        if (vertexCount == 0) {
+            vertices.clear();
+            indices.clear();
 
-        for (auto& entity : entities) {addEntities(entity);}
+            for (auto& entity : entities) {addEntities(entity);}
 
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        //glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(Vertex), vertices.data());
-        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_DYNAMIC_DRAW);
+            glBindBuffer(GL_ARRAY_BUFFER, VBO);
+            //glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(Vertex), vertices.data());
+            glBufferData(GL_ARRAY_BUFFER,  maxVertices * sizeof(Vertex), vertices.data(), GL_DYNAMIC_DRAW);
 
-        glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, EBO );
-        //glBufferSubData( GL_ELEMENT_ARRAY_BUFFER,0, indices.size() * sizeof(unsigned int), indices.data());
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_DYNAMIC_DRAW);
+            glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, EBO );
+            //glBufferSubData( GL_ELEMENT_ARRAY_BUFFER,0, indices.size() * sizeof(unsigned int), indices.data());
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER, maxVertices * sizeof(unsigned int), indices.data(), GL_DYNAMIC_DRAW);
+        }
+        else {
+            //todo: afterwards write a entitymanager.........
+            int diff = entities.size() - lastEntityCount;
+            lastEntityCount = entities.size();
+            std::cout << "Diff count: " << diff << "Entitiy Size:" << entities.size() << "Last entity Count: " << lastEntityCount << std::endl;
+            for (int i = entities.size() - diff; i < entities.size(); i++) {
+                addEntities(entities[i]);
+            }
+
+            glBindBuffer(GL_ARRAY_BUFFER, VBO);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(Vertex), vertices.data());
+            //glBufferData(GL_ARRAY_BUFFER,  maxVertices * sizeof(Vertex), vertices.data(), GL_DYNAMIC_DRAW);
+
+            glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, EBO );
+            glBufferSubData( GL_ELEMENT_ARRAY_BUFFER,0, indices.size() * sizeof(unsigned int), indices.data());
+            //glBufferData(GL_ELEMENT_ARRAY_BUFFER, maxVertices * sizeof(unsigned int), indices.data(), GL_DYNAMIC_DRAW);
+        }
+
+
 
         return;
     }
 
-    int counter = 0;
+    //todo: check vertices size vs entitites size calculation
+    // if (lastEntityCount != entities.size()) {
+    //     int diff = entities.size() - lastEntityCount;
+    //     lastEntityCount = entities.size();
+    //     std::cout << "Diff count: " << diff << "Entitiy Size:" << entities.size() << "Last entity Count: " << lastEntityCount << std::endl;
+    //     for (int i = entities.size() - diff; i < entities.size(); i++) {
+    //         addEntities(entities[i]);
+    //     }
+    // }
+
+    unsigned int counter = 0;
+    unsigned int fullEntitySize = entities.size();
+    bool fullBufferUpdate = false;
+    //todo: maybe we can make if open check and not bind the buffer again
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
     for (auto& entity : entities) {
         if (entity.isDirty()) {
             counter++;
-            //std::cout << "ENTITY IS DIRTY UPDATED " << counter << std::endl;
-            updateEntitiesVertices(entity, entity.getVertexOffset());
-            entity.updateCachedVersion();
+
+            if (!fullBufferUpdate && counter >= fullEntitySize * 0.0001) {
+                fullBufferUpdate = true;
+            }
+
+            if (!fullBufferUpdate) {
+                unsigned int verticeOffset = entity.getVertexOffset();
+                unsigned int byteOffset = verticeOffset * sizeof(Vertex);
+                updateEntitiesVertices(entity, entity.getVertexOffset());
+                glBufferSubData(GL_ARRAY_BUFFER, byteOffset, 4 * sizeof(Vertex), &vertices[verticeOffset]);
+            }
+
+            // updateEntitiesVertices(entity, entity.getVertexOffset());
+            // entity.updateCachedVersion();
+            // dirtyEntities.push_back(entity);
+            //updateEntitiesVertices(entity, entity.getVertexOffset());
+            // if (counter > 50) {
+            //     //todo: 50 bir threshold tum buffer paslansin mi degil mi diye
+            //     glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(Vertex), vertices.data());
+            //     entity.updateCachedVersion();
+            //     break;
+            // }
+            //
+            // unsigned int verticeOffset = entity.getVertexOffset();
+            // unsigned int byteOffset = verticeOffset * sizeof(Vertex);
+            // //updateEntitiesVertices(entity, entity.getVertexOffset());
+            // glBufferSubData(GL_ARRAY_BUFFER, byteOffset, 4 * sizeof(Vertex), &vertices[verticeOffset]);
+            // entity.updateCachedVersion();
         }
+
+        if (fullBufferUpdate) {
+            updateEntitiesVertices(entity, entity.getVertexOffset());
+        }
+
+        entity.updateCachedVersion();
     }
+
+    if (fullBufferUpdate) {
+        //std::cout << "Full Update " << fullEntitySize << std::endl;
+        glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(Vertex), vertices.data());
+    }
+    // else {
+    //     for (auto& entity : dirtyEntities) {
+    //         unsigned int verticeOffset = entity.getVertexOffset();
+    //         unsigned int byteOffset = verticeOffset * sizeof(Vertex);
+    //         //updateEntitiesVertices(entity, entity.getVertexOffset());
+    //         glBufferSubData(GL_ARRAY_BUFFER, byteOffset, 4 * sizeof(Vertex), &vertices[verticeOffset]);
+    //         // entity.updateCachedVersion();
+    //     }
+    // }
+    // dirtyEntities.clear();
+
+    //glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+    //glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     // std::vector<Vertex> updatedVertices;
     // std::vector<unsigned int> updatedIndices;
@@ -261,6 +374,10 @@ void Renderer::drawEntities(std::vector<Entity>& entities) {
     }
 
     //shader.setVec4("windowSize", vec4(640,360));
+
+    //todo: her seyi sil bastan yapabilir
+    // if (!updatedVertices.empty()) {
+    // }
 
     glBindVertexArray(VAO);
 
