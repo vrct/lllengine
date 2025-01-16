@@ -56,6 +56,13 @@ build CMakeFiles/lllengine.dir/src/core/app.cpp.o: CXX_COMPILER__lllengine_unsca
   OBJECT_DIR = CMakeFiles/lllengine.dir
   OBJECT_FILE_DIR = CMakeFiles/lllengine.dir/src/core
 
+build CMakeFiles/lllengine.dir/src/core/app_gof.cpp.o: CXX_COMPILER__lllengine_unscanned_Debug /Users/vericate/Development/clion/lllengine/src/core/app_gof.cpp || cmake_object_order_depends_target_lllengine
+  DEP_FILE = CMakeFiles/lllengine.dir/src/core/app_gof.cpp.o.d
+  FLAGS = -g -std=gnu++11 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.0.sdk -fcolor-diagnostics -F/Library/Developer/CommandLineTools/SDKs/MacOSX14.sdk/System/Library/Frameworks
+  INCLUDES = -I/Users/vericate/Development/clion/lllengine/include -I/Users/vericate/Development/clion/lllengine/lib/SDL2.framework/Headers/SDL.h -I/Users/vericate/Development/clion/lllengine/lib/SDL2_image.framework/Headers/SDL_image.h -I/Users/vericate/Development/clion/lllengine/lib/glew-2.2.0/include/GL -F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.0.sdk/System/Library/Frameworks -F/Users/vericate/Development/clion/lllengine/lib -isystem /opt/homebrew/include
+  OBJECT_DIR = CMakeFiles/lllengine.dir
+  OBJECT_FILE_DIR = CMakeFiles/lllengine.dir/src/core
+
 build CMakeFiles/lllengine.dir/src/core/ecs/entity.cpp.o: CXX_COMPILER__lllengine_unscanned_Debug /Users/vericate/Development/clion/lllengine/src/core/ecs/entity.cpp || cmake_object_order_depends_target_lllengine
   DEP_FILE = CMakeFiles/lllengine.dir/src/core/ecs/entity.cpp.o.d
   FLAGS = -g -std=gnu++11 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.0.sdk -fcolor-diagnostics -F/Library/Developer/CommandLineTools/SDKs/MacOSX14.sdk/System/Library/Frameworks
@@ -120,7 +127,7 @@ build CMakeFiles/lllengine.dir/src/main.cpp.o: CXX_COMPILER__lllengine_unscanned
 #############################################
 # Link the executable lllengine
 
-build lllengine: CXX_EXECUTABLE_LINKER__lllengine_Debug CMakeFiles/lllengine.dir/src/core/app.cpp.o CMakeFiles/lllengine.dir/src/core/ecs/entity.cpp.o CMakeFiles/lllengine.dir/src/core/ecs_renderer.cpp.o CMakeFiles/lllengine.dir/src/core/renderer.cpp.o CMakeFiles/lllengine.dir/src/graphic/camera.cpp.o CMakeFiles/lllengine.dir/src/graphic/glextensions.cpp.o CMakeFiles/lllengine.dir/src/graphic/shader.cpp.o CMakeFiles/lllengine.dir/src/graphic/texture.cpp.o CMakeFiles/lllengine.dir/src/main.cpp.o | /opt/homebrew/lib/libGLEW.2.2.0.dylib
+build lllengine: CXX_EXECUTABLE_LINKER__lllengine_Debug CMakeFiles/lllengine.dir/src/core/app.cpp.o CMakeFiles/lllengine.dir/src/core/app_gof.cpp.o CMakeFiles/lllengine.dir/src/core/ecs/entity.cpp.o CMakeFiles/lllengine.dir/src/core/ecs_renderer.cpp.o CMakeFiles/lllengine.dir/src/core/renderer.cpp.o CMakeFiles/lllengine.dir/src/graphic/camera.cpp.o CMakeFiles/lllengine.dir/src/graphic/glextensions.cpp.o CMakeFiles/lllengine.dir/src/graphic/shader.cpp.o CMakeFiles/lllengine.dir/src/graphic/texture.cpp.o CMakeFiles/lllengine.dir/src/main.cpp.o | /opt/homebrew/lib/libGLEW.2.2.0.dylib
   FLAGS = -g -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.0.sdk
   LINK_LIBRARIES = -Wl,-rpath,/Users/vericate/Development/clion/lllengine/lib -Wl,-rpath,/opt/homebrew/lib  -framework SDL2  -framework SDL2_image  -framework OpenGL  -framework OpenGL  -framework OpenGL  /opt/homebrew/lib/libGLEW.2.2.0.dylib  -framework OpenGL
   LINK_PATH = -F/Users/vericate/Development/clion/lllengine/lib -F/Library/Developer/CommandLineTools/SDKs/MacOSX14.sdk/System/Library/Frameworks
