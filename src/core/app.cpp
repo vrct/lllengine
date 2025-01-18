@@ -46,7 +46,7 @@ texture2D loadTexture(const char* filePath) {
 void createEntitySquares(int w, int h, int hor_Count, int vert_Count, app& context) {
     int squareWidth = w;
     int squareHeight = h;
-    auto tex = loadTexture("resources/assets/container.jpg");
+    auto tex = loadTexture("resources/assets/face.png");
 
     for (int i = 0; i < hor_Count; i++)
     {
@@ -56,7 +56,7 @@ void createEntitySquares(int w, int h, int hor_Count, int vert_Count, app& conte
             entity.addComponent<PositionComp>(Position, i* (float)squareWidth, j*(float)squareHeight);
             entity.addComponent<SizeComp>(Size, (float)squareWidth, (float)squareHeight);
             entity.addComponent<ColorComp>(Color, vec4(1.0f, 1.0f, 1.0f, 1.0f));
-            //entity.addComponent<TextureComp>(Texture, tex);
+            entity.addComponent<TextureComp>(Texture, tex);
 
             context.addEntity(entity);
         }
@@ -78,7 +78,9 @@ int app::init()
     int hor_Count = windowSize.x / squareWidth;
     int vert_Count = windowSize.y / squareHeight;
 
-    createEntitySquares(squareWidth, squareHeight, hor_Count, vert_Count, *this);
+    auto testPic2 = loadTexture("resources/assets/heart.jpg");
+    //testPic = testPic2;
+    //createEntitySquares(squareWidth, squareHeight, hor_Count, vert_Count, *this);
 
     //initSquare();
     //move to another method (camPos, camView, camZoom)
@@ -148,8 +150,8 @@ void app::update()
 
     vec4 winSize = engine.getWindowSize();
 
-    int squareWidth = 4;
-    int squareHeight = 4;
+    int squareWidth = 20;
+    int squareHeight = 20;
     int hor_Count = winSize.x / squareWidth;
     int vert_Count = winSize.y / squareHeight;
 
@@ -159,15 +161,15 @@ void app::update()
     if (mouseLeftClicked) {
         //todo: change here
         mouseLeftClicked = false;
-        // Entity entity;
-        // entity.addComponent<PositionComp>(Position, mousePos.x, mousePos.y);
-        // entity.addComponent<SizeComp>(Size, (float)squareWidth, (float)squareHeight);
-        // entity.addComponent<ColorComp>(Color, vec4(1.0f, 1.0f, 1.0f, 1.0f));
-        // //entity.addComponent<TextureComp>(Texture, tex);
-        // //entity.makeDirty();
-        //
-        // //gravitySystem.addEntity(entity);
-        // addEntity(entity);
+        Entity entity;
+        entity.addComponent<PositionComp>(Position, mousePos.x, mousePos.y);
+        entity.addComponent<SizeComp>(Size, (float)squareWidth, (float)squareHeight);
+        entity.addComponent<ColorComp>(Color, vec4(1.0f, 1.0f, 1.0f, 1.0f));
+        // entity.addComponent<TextureComp>(Texture, loadTexture("resources/assets/heart.jpg"));
+        //entity.makeDirty();
+
+        gravitySystem.addEntity(entity);
+        addEntity(entity);
     }
 
 
@@ -184,7 +186,7 @@ void app::update()
         float red   = 0.5f + 0.5f * cos(time + gradientX * M_PI);        // R bileşeni
         float green = 0.5f + 0.5f * sin(time + gradientY * M_PI);        // G bileşeni
         float blue  = 0.5f + 0.5f * sin(time + gradientX * M_PI * 0.5f);*/
-        vec4 color2 = vec4((255.0f / (float)hor_Count) * position->x / 125.0f, (255.0f / (float)vert_Count) * position->y / 125.0f, fabs(sin((startTicks2 / 1000) * PI)));
+        vec4 color2 = vec4((255.0f / (float)hor_Count) * position->x / 255.0f, (255.0f / (float)vert_Count) * position->y / 6500.0f, fabs(sin((startTicks2 / 1000) * PI)));
         //color->color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
         // if (mouseClicked && mousePos.x > position->x && mousePos.x <= position->x + size->w && mousePos.y > position->y && mousePos.y <= position->y + size->h) {
         color->updateValue(color2);
@@ -203,7 +205,7 @@ void app::draw()
     glClear(GL_COLOR_BUFFER_BIT);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    //gravitySystem.update(1);
+    gravitySystem.update(startTicks2);
     engine.ecs_renderer->drawEntities(entities, startTicks2);
 
 

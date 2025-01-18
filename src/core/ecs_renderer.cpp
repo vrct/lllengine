@@ -190,7 +190,7 @@ void Renderer::addEntities(Entity& entity) {
     vertexCount += 4;
 }
 
-unsigned int lastEntityCount;
+unsigned int lastEntityCount = 1;
 void Renderer::drawEntities(std::vector<Entity>& entities, const float deltaTime) {
     shader.use();
     shader.setVec4("windowSize", windowSize);
@@ -218,8 +218,8 @@ void Renderer::drawEntities(std::vector<Entity>& entities, const float deltaTime
         else {
             //todo: afterwards write a entitymanager.........
             int diff = entities.size() - lastEntityCount;
-            lastEntityCount = entities.size();
             std::cout << "Diff count: " << diff << "Entitiy Size:" << entities.size() << "Last entity Count: " << lastEntityCount << std::endl;
+            lastEntityCount = entities.size();
             for (int i = entities.size() - diff; i < entities.size(); i++) {
                 addEntities(entities[i]);
             }
@@ -232,8 +232,6 @@ void Renderer::drawEntities(std::vector<Entity>& entities, const float deltaTime
             glBufferSubData( GL_ELEMENT_ARRAY_BUFFER,0, indices.size() * sizeof(unsigned int), indices.data());
             //glBufferData(GL_ELEMENT_ARRAY_BUFFER, maxVertices * sizeof(unsigned int), indices.data(), GL_DYNAMIC_DRAW);
         }
-
-
 
         return;
     }

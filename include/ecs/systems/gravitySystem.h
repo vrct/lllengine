@@ -17,7 +17,8 @@ class gravitySystem : public System {
             for (auto& entity : entities) {
                 auto* position = entity.getComponent<PositionComp>(Position);
                 //newPos.y = position->y - deltaTime * 0.01f;
-                position->updateValue(position->x,position->y - deltaTime * 0.01f);
+                //position->updateValue(position->x,position->y - deltaTime * 0.000001f);
+                position->updateValue(position->x,position->y - 0.08f);
             }
         }
 
