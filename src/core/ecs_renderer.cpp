@@ -1,8 +1,9 @@
 #include "ecs_renderer.h"
 
 #include <renderer.h>
+#include <ecs/entityManager.h>
 
-Renderer::Renderer(Shader& s) : shader(s), vertexCount(0)
+Renderer::Renderer(Shader& s, EntityManager& e) : shader(s), entity_manager(e), vertexCount(0)
 {
     initBuffers();
 };
@@ -25,7 +26,7 @@ void Renderer::initBuffers()
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, maxVertices * sizeof(Vertex), NULL, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, maxVertices * 2 * sizeof(Vertex), NULL, GL_DYNAMIC_DRAW);
 
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
     glEnableVertexAttribArray(0);
@@ -45,7 +46,7 @@ void Renderer::initBuffers()
     };
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, maxVertices * sizeof(unsigned int), NULL, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, maxVertices * 2 * sizeof(unsigned int), NULL, GL_DYNAMIC_DRAW);
     //glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     glBindVertexArray(0);
@@ -102,6 +103,8 @@ void Renderer::updateBuffers()
         std::cerr << "OpenGL Error in updateBuffer: " << error << std::endl;
     }
 }
+
+
 
 void Renderer::updateEntitiesVertices(Entity &entity, unsigned int verticeOffset) {
     auto* position = entity.getComponent<PositionComp>(Position);
@@ -188,6 +191,183 @@ void Renderer::addEntities(Entity& entity) {
     entity.setIndicesOffset(indices.size() - 6);
 
     vertexCount += 4;
+}
+
+void Renderer::updateEntitiesVerticesBuffer() {
+
+    for (unsigned int i = 0; i < entity_manager.entities.size(); i++) {
+        auto entityId = entity_manager.entities[i];
+        PositionComponent position = entity_manager.componentManager.positionComponents[i];
+        SizeComponent size = entity_manager.componentManager.sizeComponents[i];
+        ColorComponent color = entity_manager.componentManager.colorComponents[i];
+
+        auto x = position.x;
+        auto y = position.y;
+        auto w = size.w;
+        auto h = size.h;
+        auto color2 = color.color;
+
+        unsigned int verticeOffset = (entityId - 1) * 4;
+        vertices[verticeOffset] =     Vertex{x, y, w, h, color2, 0,0};
+        vertices[verticeOffset + 1] = Vertex{x, y + h, w, h, color2, 1,0};
+        vertices[verticeOffset + 2] = Vertex{x + w, y, w, h, color2, 0,1};
+        vertices[verticeOffset + 3] = Vertex{x + w, y + h, w, h, color2, 1, 1};
+    }
+    // int count = 100;
+    // if (count-- == 0) {return;}
+    // auto* color = entity_manager.getComponent<ColorComponent>(entityId, Color);
+    // auto* position = entity_manager.getComponent<PositionComponent>(entityId, (int)Position);
+    // auto* size = entity_manager.getComponent<SizeComponent>(entityId, Size);
+    // //
+    // // PositionComponent positiona {1,1};
+    // // SizeComponent sizea {40,40};
+    // // ColorComponent colora {vec4{1,1,1,1}};
+    // // auto* position = &positiona;
+    // // auto* size = &sizea;
+    // // auto* color = &colora;
+    //
+    // float x = position->x;
+    // float y = position->y;
+    // float w = size->w;
+    // float h = size->h;
+    // vec4 color2 = color->color;
+
+    //todo: add texture check auch
+    //if (!position || !size || !color) return;
+    // unsigned int verticeOffset = (entityId - 1) * 4;
+    // vertices[verticeOffset] =     Vertex{x, y, w, h, color2, 0,0};
+    // vertices[verticeOffset + 1] = Vertex{x, y + h, w, h, color2, 1,0};
+    // vertices[verticeOffset + 2] = Vertex{x + w, y, w, h, color2, 0,1};
+    // vertices[verticeOffset + 3] = Vertex{x + w, y + h, w, h, color2, 1, 1};
+}
+
+void Renderer::addEntitiesBuffer() {
+    for (unsigned int i = 0; i < entity_manager.entities.size(); i++) {
+        auto entityId = entity_manager.entities[i];
+        PositionComponent position = entity_manager.componentManager.positionComponents[i];
+        SizeComponent size = entity_manager.componentManager.sizeComponents[i];
+        ColorComponent color = entity_manager.componentManager.colorComponents[i];
+
+        // std::cout << entityId << "POS: " << position.x << " " << position.y << std::endl;
+
+        vertices.push_back(Vertex{position.x, position.y, size.w, size.h, color.color, 0,0});
+        // Sol üst köşe
+        vertices.push_back(Vertex{position.x, position.y + size.h, size.w, size.h, color.color, 1,0});
+        // Sağ alt köşe
+        vertices.push_back(Vertex{position.x + size.w, position.y, size.w, size.h, color.color, 0,1});
+        // Sağ üst köşe
+        vertices.push_back(Vertex{position.x + size.w, position.y + size.h, size.w, size.h, color.color, 1, 1});
+
+        //unsigned int indices_offset = vertexCount * 4;
+        //todo: check calculation here
+        //unsigned int indices_offset = vertexStartIndex;
+        unsigned int indices_offset = vertexCount;
+
+        indices.push_back(indices_offset);
+        indices.push_back(indices_offset + 1);
+        indices.push_back(indices_offset + 2);
+        indices.push_back(indices_offset + 1);
+        indices.push_back(indices_offset + 2);
+        indices.push_back(indices_offset + 3);
+
+        // entity.setVertexOffset(vertexStartIndex);
+        // entity.setIndicesOffset(indices.size() - 6);
+
+        vertexCount += 4;
+    }
+
+    // for (auto entityId : entity_manager.entities) {
+    //     auto* position = entity_manager.getComponent<PositionComponent>(entityId, (int)Position);
+    //     auto* size = entity_manager.getComponent<SizeComponent>(entityId, Size);
+    //     auto* color = entity_manager.getComponent<ColorComponent>(entityId, Color);
+    //     // auto* texture = entityManager->getComponent<PositionComp>(entityId, Position);
+    //
+    //     if (!position || !size || !color) return;
+    //
+    //     unsigned int vertexStartIndex  = vertices.size();
+    //
+    //     // if (!texture) {
+    //     // shader.setBool("hasTexture", GL_FALSE);
+    //     // glBindTexture(GL_TEXTURE_2D, 0);
+    //     // } else {
+    //     //     shader.setBool("hasTexture", GL_TRUE);
+    //     //     texture->texture.bind();
+    //     // }
+    //
+    //     vertices.push_back(Vertex{position->x, position->y, size->w, size->h, color->color, 0,0});
+    //     // Sol üst köşe
+    //     vertices.push_back(Vertex{position->x, position->y + size->h, size->w, size->h, color->color, 1,0});
+    //     // Sağ alt köşe
+    //     vertices.push_back(Vertex{position->x + size->w, position->y, size->w, size->h, color->color, 0,1});
+    //     // Sağ üst köşe
+    //     vertices.push_back(Vertex{position->x + size->w, position->y + size->h, size->w, size->h, color->color, 1, 1});
+    //
+    //     //unsigned int indices_offset = vertexCount * 4;
+    //     //todo: check calculation here
+    //     //unsigned int indices_offset = vertexStartIndex;
+    //     unsigned int indices_offset = vertexCount;
+    //
+    //     indices.push_back(indices_offset);
+    //     indices.push_back(indices_offset + 1);
+    //     indices.push_back(indices_offset + 2);
+    //     indices.push_back(indices_offset + 1);
+    //     indices.push_back(indices_offset + 2);
+    //     indices.push_back(indices_offset + 3);
+    //
+    //     // entity.setVertexOffset(vertexStartIndex);
+    //     // entity.setIndicesOffset(indices.size() - 6);
+    //
+    //     vertexCount += 4;
+    // }
+}
+
+void Renderer::drawEntitiesBuffer() {
+    shader.use();
+    shader.setVec4("windowSize", windowSize);
+
+    // vertices.clear();
+
+    //for (auto& entityId : entityManager->entities) {addEntitiesBuffer(entityManager, entityId);}
+    if (vertices.empty()) {
+        addEntitiesBuffer();
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+        // glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_DYNAMIC_DRAW);
+        glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, indices.size() * sizeof(unsigned int), indices.data());
+    }
+    else {
+        updateEntitiesVerticesBuffer();
+    }
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    // glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_DYNAMIC_DRAW);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(Vertex), vertices.data());
+
+    glBindVertexArray(VAO);
+    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, nullptr);
+    // glBindVertexArray(0);
+
+
+    // glBufferSubData( GL_ELEMENT_ARRAY_BUFFER,0, indices.size() * sizeof(unsigned int), indices.data());
+    // glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_DYNAMIC_DRAW);
+    // glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    // // glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(Vertex), vertices.data());
+    // glBufferData(GL_ARRAY_BUFFER,  vertices.size() * sizeof(Vertex), vertices.data(), GL_DYNAMIC_DRAW);
+    //
+    // glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, EBO );
+    // // glBufferSubData( GL_ELEMENT_ARRAY_BUFFER,0, indices.size() * sizeof(unsigned int), indices.data());
+    // glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_DYNAMIC_DRAW);
+    //
+    // glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    // glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(Vertex), vertices.data());
+
+    // glBindVertexArray(VAO);
+
+    //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    // glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, nullptr);
+    //glBindVertexArray(0);
+
+    // clear();
 }
 
 unsigned int lastEntityCount = 1;

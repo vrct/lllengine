@@ -6,25 +6,16 @@
 #define ENTITY_H
 
 #include <map>
-
-#include "unordered_map"
 #include "string"
+#include "ecs/enum.h"
 
-enum ComponentType {
-    None = 0,
-    Position = 1,
-    Size = 2,
-    Color = 3,
-    Texture = 4
-};
+
 
 class Component {
     private:
-        ComponentType _id = None;
         unsigned int _versionId = 0;
     public:
         virtual ~Component() = default;
-        ComponentType get_id() const { return _id; }
 
         template <typename T>
         void updateValue(T newValue) {

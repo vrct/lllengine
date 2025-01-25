@@ -5,6 +5,10 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+app::app() : componentManager(), entityManager(componentManager) {
+
+}
+
 int app::start(int width, int height)
 {
     printf("INIT SUCCESSSSSSSSSS 0 ");
@@ -43,44 +47,55 @@ texture2D loadTexture(const char* filePath) {
 }
 
 //endregion
-void createEntitySquares(int w, int h, int hor_Count, int vert_Count, app& context) {
+void createEntitySquares(int w, int h, int hor_Count, int vert_Count, EntityManager& context) {
     int squareWidth = w;
     int squareHeight = h;
     auto tex = loadTexture("resources/assets/face.png");
 
-    for (int i = 0; i < hor_Count; i++)
+    for (int i = 0; i < vert_Count; i++)
     {
-        for (int j = 0; j < vert_Count; j++)
+        for (int j = 0; j < hor_Count; j++)
         {
-            Entity entity;
-            entity.addComponent<PositionComp>(Position, i* (float)squareWidth, j*(float)squareHeight);
-            entity.addComponent<SizeComp>(Size, (float)squareWidth, (float)squareHeight);
-            entity.addComponent<ColorComp>(Color, vec4(1.0f, 1.0f, 1.0f, 1.0f));
-            entity.addComponent<TextureComp>(Texture, tex);
+            // Entity entity;
+            // entity.addComponent<PositionComp>(Position, i* (float)squareWidth, j*(float)squareHeight);
+            // entity.addComponent<SizeComp>(Size, (float)squareWidth, (float)squareHeight);
+            // entity.addComponent<ColorComp>(Color, vec4(1.0f, 1.0f, 1.0f, 1.0f));
+            // entity.addComponent<TextureComp>(Texture, tex);
+            //
+            // context.addEntity(entity);
 
-            context.addEntity(entity);
+            auto e = context.createEntity();
+            vec4 color2 = vec4((255.0f / (float)hor_Count) * (i* (float)squareWidth) / 255.0f, (255.0f / (float)vert_Count) * (j*(float)squareHeight) / 6500.0f, 1);
+            context.addComponent(e, Position, PositionComponent{i* (float)squareWidth, j*(float)squareHeight});
+            context.addComponent(e, Color, ColorComponent{color2});
+            context.addComponent(e, Size, SizeComponent{(float)squareWidth, (float)squareHeight});
         }
     }
 }
 
 int app::init()
 {
+    //new (&entityManager) EntityManager(componentManager);
     //ourShader = Shader("resources/shaders/vertex.vert", "resources/shaders/fragment.frag");
     //ourShader.use();
     vec4 windowSize = engine.getWindowSize();
     auto* shader = new Shader("resources/shaders/vertex.vert", "resources/shaders/fragment.frag");
     //Shader shader = Shader("resources/shaders/vertex.vert", "resources/shaders/fragment.frag");
-    engine.ecs_renderer = new Renderer(*shader);
+    engine.ecs_renderer = new Renderer(*shader, entityManager);
     engine.ecs_renderer->windowSize = windowSize;
+    // ComponentManager componentManager;
+    //entityManager = new EntityManager(componentManager);
+    // entityManager(componentManager);
 
-    int squareWidth = 3;
-    int squareHeight = 3;
+
+    int squareWidth = 2;
+    int squareHeight = 2;
     int hor_Count = windowSize.x / squareWidth;
     int vert_Count = windowSize.y / squareHeight;
 
     auto testPic2 = loadTexture("resources/assets/heart.jpg");
     //testPic = testPic2;
-    //createEntitySquares(squareWidth, squareHeight, hor_Count, vert_Count, *this);
+    createEntitySquares(squareWidth, squareHeight, hor_Count, vert_Count, entityManager);
 
     //initSquare();
     //move to another method (camPos, camView, camZoom)
@@ -160,40 +175,58 @@ void app::update()
 
     if (mouseLeftClicked) {
         //todo: change here
-        mouseLeftClicked = false;
-        Entity entity;
-        entity.addComponent<PositionComp>(Position, mousePos.x, mousePos.y);
-        entity.addComponent<SizeComp>(Size, (float)squareWidth, (float)squareHeight);
-        entity.addComponent<ColorComp>(Color, vec4(1.0f, 1.0f, 1.0f, 1.0f));
-        // entity.addComponent<TextureComp>(Texture, loadTexture("resources/assets/heart.jpg"));
-        //entity.makeDirty();
-
-        gravitySystem.addEntity(entity);
-        addEntity(entity);
+        // mouseLeftClicked = false;
+        // Entity entity;
+        // entity.addComponent<PositionComp>(Position, mousePos.x, mousePos.y);
+        // entity.addComponent<SizeComp>(Size, (float)squareWidth, (float)squareHeight);
+        // entity.addComponent<ColorComp>(Color, vec4(1.0f, 1.0f, 1.0f, 1.0f));
+        // // entity.addComponent<TextureComp>(Texture, loadTexture("resources/assets/heart.jpg"));
+        // //entity.makeDirty();
+        //
+        // gravitySystem.addEntity(entity);
+        // addEntity(entity);
     }
 
 
 
 
-    for (auto& entity : entities) {
-        auto* color = entity.getComponent<ColorComp>(Color);
-        auto* position = entity.getComponent<PositionComp>(Position);
-        auto* size = entity.getComponent<SizeComp>(Size);
-        /*float gradientX = position->x / float(hor_Count);  // 0.0 → 1.0 (soldan sağa)
-        float gradientY = position->y / float(vert_Count); // 0.0 → 1.0 (aşağıdan yukarıya)
+    for (unsigned int i = 0; i < entityManager.entities.size(); i++) {
+        auto p = rand() % 100 + 1;
+        auto s = rand() % 2;
+        auto m = rand() + 1;
+        PositionComponent& position = entityManager.componentManager.positionComponents[i];
+        SizeComponent& size = entityManager.componentManager.sizeComponents[i];
+        ColorComponent& color = entityManager.componentManager.colorComponents[i];
 
-        // Saat yönünde dönen renkler
-        float red   = 0.5f + 0.5f * cos(time + gradientX * M_PI);        // R bileşeni
-        float green = 0.5f + 0.5f * sin(time + gradientY * M_PI);        // G bileşeni
-        float blue  = 0.5f + 0.5f * sin(time + gradientX * M_PI * 0.5f);*/
-        vec4 color2 = vec4((255.0f / (float)hor_Count) * position->x / 255.0f, (255.0f / (float)vert_Count) * position->y / 6500.0f, fabs(sin((startTicks2 / 1000) * PI)));
-        //color->color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
-        // if (mouseClicked && mousePos.x > position->x && mousePos.x <= position->x + size->w && mousePos.y > position->y && mousePos.y <= position->y + size->h) {
-        color->updateValue(color2);
-        // }
+        vec4 color2 = vec4((255.0f / (float)hor_Count) * position.x / 255.0f, (255.0f / (float)vert_Count) * position.y / 6500.0f, fabs(sin((startTicks2 / 1000) * PI)));
+        color.color = color2;
 
-        //position->updateValue(position->x, position->y - 0.1f);
+        position.x = m % 2 == 0 ? position.x + p : position.x - p;
+        position.y = m % 2 == 0 ? position.y - p : position.y + p;
+
+        // size.w = m % 2 == 0 ? size.w + s : size.w - s;
+        // size.h = m % 2 == 0 ? size.h - s : size.h + s;
+
     }
+//         auto* color = entity.getComponent<ColorComp>(Color);
+//         auto* position = entity.getComponent<PositionComp>(Position);
+//         auto* size = entity.getComponent<SizeComp>(Size);
+//         /*float gradientX = position->x / float(hor_Count);  // 0.0 → 1.0 (soldan sağa)
+//         float gradientY = position->y / float(vert_Count); // 0.0 → 1.0 (aşağıdan yukarıya)
+//
+//         // Saat yönünde dönen renkler
+//         float red   = 0.5f + 0.5f * cos(time + gradientX * M_PI);        // R bileşeni
+//         float green = 0.5f + 0.5f * sin(time + gradientY * M_PI);        // G bileşeni
+//         float blue  = 0.5f + 0.5f * sin(time + gradientX * M_PI * 0.5f);*/
+//         vec4 color2 = vec4((255.0f / (float)hor_Count) * position->x / 255.0f, (255.0f / (float)vert_Count) * position->y / 6500.0f, fabs(sin((startTicks2 / 1000) * PI)));
+//         //color->color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+//         // if (mouseClicked && mousePos.x > position->x && mousePos.x <= position->x + size->w && mousePos.y > position->y && mousePos.y <= position->y + size->h) {
+//         //color->updateValue(color2);
+//         // }
+//
+//         //position->updateValue(position->x, position->y - 0.1f);
+//     }
+
 }
 
 
@@ -205,8 +238,9 @@ void app::draw()
     glClear(GL_COLOR_BUFFER_BIT);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    gravitySystem.update(startTicks2);
-    engine.ecs_renderer->drawEntities(entities, startTicks2);
+    //gravitySystem.update(startTicks2);
+    //engine.ecs_renderer->drawEntities(entities, startTicks2);
+    engine.ecs_renderer->drawEntitiesBuffer();
 
 
     // if (mouseRightClicked) {
@@ -216,7 +250,7 @@ void app::draw()
     // }
 
 
-    engine.calculateFPS();
+    engine.calculateFPS((int)entityManager.entities[entityManager.entities.size() - 1]);
 }
 
 int app::pause()

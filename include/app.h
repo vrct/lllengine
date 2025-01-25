@@ -5,6 +5,8 @@
 #include "ecs/entity.h"
 #include "ecs/systems/gravitySystem.h"
 #include "ecs/systems/renderSystem.h"
+#include "ecs/componentManager.h"
+#include "ecs/entityManager.h"
 //#include "camera.h"
 
 class app
@@ -15,20 +17,25 @@ class app
         //maybe change maybe no need
         void pollEvents();
         std::vector<Entity> entities;
+        ComponentManager componentManager; // ComponentManager örneği
+        EntityManager entityManager;       // EntityManager örneği
 
         //todo: hold current ticks in here too 
 
 //todo: protected maybe better, and seperate game.cpp class
     public:
         bool quit { false }; //todo: rename
-        const float maxFPS { 900.0f};
+        const float maxFPS { 10000.0f};
         const double PI  { atan(1) * 4 };
         Shader ourShader;
         gravitySystem gravitySystem;
+        //EntityManager* entityManager;
+        //ComponentManager* componentManager;
         //Camera cam;
     /*
         todo: appname, bundleid, maxfps vs. info about game
     */
+        app();
         //create engine instance
         int start(int width = 500, int height = 500);
         //run init methods
@@ -41,11 +48,11 @@ class app
         int pause();
         //kill every process and memory allocations
         int kill();
-
-        //todo: temporary change here to entity manager
-        void addEntity(const Entity &entity) {
-            entities.push_back(entity);
-        }
+        //
+        // //todo: temporary change here to entity manager
+        // void addEntity(const Entity &entity) {
+        //     entities.push_back(entity);
+        // }
 };
 
 #endif

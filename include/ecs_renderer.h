@@ -1,6 +1,8 @@
 #ifndef ECS_RENDERER_H
 #define ECS_RENDERER_H
 
+#include <ecs/entityManager.h>
+
 #include "vector"
 #include "vec4.h"
 #include "shader.h"
@@ -19,14 +21,17 @@ struct Vertex {
 
 class Renderer {
     public:
-        Renderer(Shader& shader);
+        Renderer(Shader& shader, EntityManager& entity_manager);
         ~Renderer();
 
         //todo: remove from field make setter ?
         vec4 windowSize;
+        EntityManager& entity_manager;
         void pushVertex(const Vertex& vertex);
         void draw();
         void drawEntities(std::vector<Entity>& entities,const float deltaTime);
+        void addEntitiesBuffer();
+        void drawEntitiesBuffer();
         void clear();
 
     private:
@@ -40,6 +45,9 @@ class Renderer {
         void initBuffers();
         void updateBuffers();
         void addEntities(Entity& entity);
+
+        void updateEntitiesVerticesBuffer();
+
         void removeEntities(Entity& entity);
         void updateEntitiesVertices(Entity& entity, unsigned int verticeOffset);
         std::vector<Vertex> updateEntitiesVerticesV(Entity& entity, unsigned int verticeOffset);

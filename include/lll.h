@@ -39,7 +39,7 @@ struct lll
             SDL_SetWindowSize(window, width, height);
         }
 
-        void calculateFPS()
+        void calculateFPS(int entityCount)
         {
             frameCount++;
             Uint32 currentTime = SDL_GetTicks();
@@ -48,7 +48,7 @@ struct lll
             if(elapsedSeconds >= 1.0f)
             {
                 FPS = frameCount / elapsedSeconds;
-                std::cout << "FPS: " <<  FPS << std::endl; 
+                std::cout << "FPS: " <<  FPS << " ECS_ENTITYCOUNT: " << entityCount << std::endl;
                 //std::cout << "VERTICECOUNT: " << renderer.vertexCount << std::endl; 
                 frameCount = 0;
                 startTime = currentTime;
