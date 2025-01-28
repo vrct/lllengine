@@ -13,6 +13,14 @@ enum ComponentType {
     Texture = 3
 };
 
+enum class ComponentTypeE : unsigned int
+{
+    Position = 1 << 0,
+    Velocity = 1 << 1,
+    Graphics = 1 << 2,
+    Texture = 1 << 3
+};
+
 struct PositionComponent {
     float x;
     float y;

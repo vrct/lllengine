@@ -18,7 +18,6 @@ class app
         void pollEvents();
         std::vector<Entity> entities;
         ComponentManager componentManager; // ComponentManager örneği
-        EntityManager entityManager;       // EntityManager örneği
 
         //todo: hold current ticks in here too 
 

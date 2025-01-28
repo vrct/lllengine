@@ -21,12 +21,12 @@ struct Vertex {
 
 class Renderer {
     public:
-        Renderer(Shader& shader, EntityManager& entity_manager);
+        Renderer(Shader& shader, ComponentManager& componentManager);
         ~Renderer();
 
         //todo: remove from field make setter ?
         vec4 windowSize;
-        EntityManager& entity_manager;
+        ComponentManager& componentManager;
         void pushVertex(const Vertex& vertex);
         void draw();
         void drawEntities(std::vector<Entity>& entities,const float deltaTime);
