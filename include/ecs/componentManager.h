@@ -20,11 +20,17 @@ class ComponentManager {
         std::unordered_map<unsigned int, std::unordered_map<int, size_t>> entityOffsets; //entityid, {entityStartOffset, entityCompTotalSize}
         //std::unordered_map<unsigned int, unsigned int> entityBitmasks;
 
+        std::vector<ComponentMask> entityMasks;
 
         std::vector<PositionComponent> positionComponents;
+        std::vector<Entity> freePositionIndices;
+
         std::vector<SizeComponent> sizeComponents;
+        std::vector<Entity> freeSizeIndices;
+
         std::vector<ColorComponent> colorComponents;
-        std::unordered_map<Entity, ComponentMask> entityMasks;
+        std::vector<Entity> freeColorIndices;
+
         Entity nextEntityId = 0;
 
 
@@ -35,36 +41,108 @@ class ComponentManager {
 
     public:
 
+        size_t entityCount = 0;
+        std::vector<unsigned int> entityVerticeOffsets;
+        bool entitiesUpdated = false;
+
+        std::vector<Entity> freeIndices;
         //entitiy new region
 
         Entity createEntity() {
+            if (!freeIndices.empty()) {
+                Entity id = freeIndices.back();
+                freeIndices.pop_back();
+                for (Entity i = id + 1; i < entityVerticeOffsets.size(); ++i) {
+                    entityVerticeOffsets[i] += 4;
+                }
+                entitiesUpdated = true;
+                return id;
+            } else {
+                Entity id = entityMasks.size();
+                entityVerticeOffsets.push_back(entityMasks.size() * 4);
+                entityMasks.emplace_back();
+                entitiesUpdated = true;
+                return id;
+            }
+
+            // if (!freePositionIndices.empty()) {
+            //     Entity entityId = freePositionIndices.back();
+            //     freePositionIndices.pop_back();
+            //
+            //     ComponentMask& mask = entityMasks[entityId];
+            //     mask.reset();
+            //
+            //     std::cout << "ENTITY ADDED USED FREE INDEXES ID: " << entityId << std::endl;
+            //     entityVerticeOffsets[entityId] = positionTotalSize;
+            //     return entityId;
+            // }
+            // std::cout << "ENTITY ADDED NEW ID: " << entityCount + 1 << std::endl;
+            // entityMasks.emplace_back();
+            // entityVerticeOffsets.emplace_back(entityCount * 4);
+            // return entityCount++;
+
+            if (entityMasks.size() == entityCount) {
+                entityMasks.emplace_back();
+            }
+            //return entityCount++;
+            ++entityCount;
+            return entityCount - 1;
+
             Entity entityId = nextEntityId++;
             entityMasks[entityId] = ComponentMask(0);
             return entityId;
         }
 
         void addComponent(Entity entityId, const PositionComponent& component) {
-            if (positionComponents.size() <= entityId) {
-                positionComponents.resize(entityId + 1);
+            if (freePositionIndices.empty()) {
+                positionComponents.emplace_back(component);
+                entityMasks[entityId].set(Position);
+            } else {
+                Entity index = freePositionIndices.back();
+                freePositionIndices.pop_back();
+                positionComponents[index] = component;
+                entityMasks[entityId].set(Position);
             }
-            positionComponents[entityId] = component;
-            entityMasks[entityId].set(Position);
+            // if (positionComponents.size() <= entityId) {
+            //     positionComponents.resize(entityId + 1);
+            // }
+            // positionComponents[entityId] = component;
+            // entityMasks[entityId].set(Position);
         }
 
         void addComponent(Entity entityId, const SizeComponent& component) {
-            if (sizeComponents.size() <= entityId) {
-                sizeComponents.resize(entityId + 1);
+            if (freeSizeIndices.empty()) {
+                sizeComponents.emplace_back(component);
+                entityMasks[entityId].set(Size);
+            } else {
+                Entity index = freeSizeIndices.back();
+                freeSizeIndices.pop_back();
+                sizeComponents[index] = component;
+                entityMasks[entityId].set(Size);
             }
-            sizeComponents[entityId] = component;
-            entityMasks[entityId].set(Size);
+            // if (sizeComponents.size() <= entityId) {
+            //     sizeComponents.resize(entityId + 1);
+            // }
+            // sizeComponents[entityId] = component;
+            // entityMasks[entityId].set(Size);
+
         }
 
         void addComponent(Entity entityId, const ColorComponent& component) {
-            if (colorComponents.size() <= entityId) {
-                colorComponents.resize(entityId + 1);
+            if (freeColorIndices.empty()) {
+                colorComponents.emplace_back(component);
+                entityMasks[entityId].set(Color);
+            } else {
+                Entity index = freeColorIndices.back();
+                freeColorIndices.pop_back();
+                colorComponents[index] = {component};
+                entityMasks[entityId].set(Color);
             }
-            colorComponents[entityId] = component;
-            entityMasks[entityId].set(Color);
+            // if (colorComponents.size() <= entityId) {
+            //     colorComponents.resize(entityId + 1);
+            // }
+            // colorComponents[entityId] = component;
+            // entityMasks[entityId].set(Color);
         }
 
         PositionComponent* getPositionComponent(Entity entityId) {
@@ -88,10 +166,90 @@ class ComponentManager {
             return nullptr;
         }
 
-        const std::unordered_map<Entity, ComponentMask>& getEntityMask() const {
-            return entityMasks;
+        //remove
+        void removeEntity(Entity entityId) {
+            if (entityId >= entityMasks.size()) return;
+
+            // ComponentMask'ı sıfırla
+
+            ComponentMask& mask = entityMasks[entityId];
+            if (!mask.any()) return;
+            if (mask.test(Position)) {
+                freePositionIndices.push_back(entityId);
+                // mask.reset(Position);
+            }
+            if (mask.test(Size)) {
+                freeSizeIndices.push_back(entityId);
+                // mask.reset(Size);
+            }
+            if (mask.test(Color)) {
+                freeColorIndices.push_back(entityId);
+                // mask.reset(Color);
+            }
+            entityMasks[entityId].reset();
+
+
+            // Silinen entity'nin offset'ini freeIndices'e eklemek yerine
+            // silinen entity'den sonraki tüm offset'leri 4 eksilt
+            for (Entity i = entityId + 1; i < entityVerticeOffsets.size(); ++i) {
+                entityVerticeOffsets[i] -= 4;
+            }
+
+            // Silinen entity'nin ID'sini freeIndices'e ekle
+            freeIndices.push_back(entityId);
+            entitiesUpdated = true;
+            // if (entityId >= entityCount) return;
+            //
+            // // Bileşen maskesini sıfırla
+            // ComponentMask& mask = entityMasks[entityId];
+            // if (!mask.any()) return;
+            // if (mask.test(Position)) {
+            //     freePositionIndices.push_back(entityId);
+            //     mask.reset(Position);
+            // }
+            // if (mask.test(Size)) {
+            //     freeSizeIndices.push_back(entityId);
+            //     mask.reset(Size);
+            // }
+            // if (mask.test(Color)) {
+            //     freeColorIndices.push_back(entityId);
+            //     mask.reset(Color);
+            // }
+            //
+            //
+            // while (entityCount > 0 && !entityMasks[entityCount - 1].any()) {
+            //     entityCount--;
+            // }
+            //
+            // std::cout << "ENTITY REMOVED ID: " << entityId << std::endl;
+            //
+            // for (Entity i = entityId + 1; i < entityCount; ++i) {
+            //     entityVerticeOffsets[i] -= 4;
+            // }
         }
 
+        void removePositionComponent(Entity entityId) {
+            if (entityMasks[entityId].test(Position)) {
+                freePositionIndices.push_back(entityId);
+                entityMasks[entityId].reset(Position);
+            }
+        }
+
+        void removeSizeComponent(Entity entityId) {
+            if (entityMasks[entityId].test(Size)) {
+                freeSizeIndices.push_back(entityId);
+                entityMasks[entityId].reset(Size);
+            }
+        }
+
+        void removeColorComponent(Entity entityId) {
+            if (entityMasks[entityId].test(Color)) {
+                freeColorIndices.push_back(entityId);
+                entityMasks[entityId].reset(Color);
+            }
+        }
+
+        std::vector<ComponentMask>& getEntityMasks() { return entityMasks; }
         //
 
         // void addComponent(unsigned int entityId, const PositionComponent& position) {

@@ -195,9 +195,9 @@ void Renderer::addEntities(Entity& entity) {
 }
 
 void Renderer::updateEntitiesVerticesBuffer() {
-    auto& entityMasks = componentManager.getEntityMask();
-    for (const auto& [entityId, mask] : entityMasks) {
-        // if (mask.test(Position) && mask.test(Size) && mask.test(Color)) {
+    for (Entity entityId = 0; entityId < componentManager.getEntityMasks().size(); entityId++) {
+        auto& mask = componentManager.getEntityMasks()[entityId];
+        if (mask.test(Position) && mask.test(Size) && mask.test(Color)) {
             PositionComponent* position = componentManager.getPositionComponent(entityId);
             SizeComponent* size = componentManager.getSizeComponent(entityId);
             ColorComponent* color = componentManager.getColorComponent(entityId);
@@ -208,12 +208,12 @@ void Renderer::updateEntitiesVerticesBuffer() {
             auto h = size->h;
             auto color2 = color->color;
 
-            unsigned int verticeOffset = (entityId) * 4;
+            unsigned int verticeOffset = componentManager.entityVerticeOffsets[entityId];
             vertices[verticeOffset] =     Vertex{x, y, w, h, color2, 0,0};
             vertices[verticeOffset + 1] = Vertex{x, y + h, w, h, color2, 1,0};
             vertices[verticeOffset + 2] = Vertex{x + w, y, w, h, color2, 0,1};
             vertices[verticeOffset + 3] = Vertex{x + w, y + h, w, h, color2, 1, 1};
-        // }
+        }
     }
 
     // for (unsigned int i = 0; i < entity_manager.entities.size(); i++) {
@@ -263,7 +263,8 @@ void Renderer::updateEntitiesVerticesBuffer() {
 }
 
 void Renderer::addEntitiesBuffer() {
-    for (const auto& [entityId, mask] : componentManager.getEntityMask()) {
+    for (Entity entityId = 0; entityId < componentManager.getEntityMasks().size(); entityId++) {
+        auto& mask = componentManager.getEntityMasks()[entityId];
         if (mask.test(Position) && mask.test(Size) && mask.test(Color)) {
             PositionComponent* position = componentManager.getPositionComponent(entityId);
             SizeComponent* size = componentManager.getSizeComponent(entityId);
@@ -293,6 +294,9 @@ void Renderer::addEntitiesBuffer() {
             // entity.setIndicesOffset(indices.size() - 6);
 
             vertexCount += 4;
+        }
+        else {
+            // std::cerr << "Entity doesn't exist ID: " <<  entityId << std::endl;
         }
     }
 
@@ -375,6 +379,7 @@ void Renderer::addEntitiesBuffer() {
     // }
 }
 
+unsigned int lastEntityCount = 0;
 void Renderer::drawEntitiesBuffer() {
     shader.use();
     shader.setVec4("windowSize", windowSize);
@@ -382,7 +387,12 @@ void Renderer::drawEntitiesBuffer() {
     // vertices.clear();
 
     //for (auto& entityId : entityManager->entities) {addEntitiesBuffer(entityManager, entityId);}
-    if (vertices.empty()) {
+    // auto maskSize = componentManager.getEntityMasks().size();
+    if (vertices.empty() || componentManager.entitiesUpdated) {
+        // lastEntityCount = componentManager.entityCount;
+        componentManager.entitiesUpdated = false;
+        // std::cout << "ENTITY COUNT CHANGED: " <<  componentManager.getEntityMasks().size() << std::endl;
+        clear();
         addEntitiesBuffer();
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
@@ -424,7 +434,6 @@ void Renderer::drawEntitiesBuffer() {
     // clear();
 }
 
-unsigned int lastEntityCount = 1;
 void Renderer::drawEntities(std::vector<Entity>& entities, const float deltaTime) {
     shader.use();
     shader.setVec4("windowSize", windowSize);

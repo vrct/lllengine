@@ -7,18 +7,19 @@
 #include <vec4.h>
 
 enum ComponentType {
-    Position = 0,
-    Size = 1,
-    Color = 2,
-    Texture = 3
+    Position = 1 << 0,
+    Size = 1 << 1,
+    Color = 1 << 2,
+    Texture = 1 << 3
 };
 
 enum class ComponentTypeE : unsigned int
 {
-    Position = 1 << 0,
-    Velocity = 1 << 1,
-    Graphics = 1 << 2,
-    Texture = 1 << 3
+    Empty = 1 << 0,
+    Position = 1 << 1,
+    Velocity = 1 << 2,
+    Graphics = 1 << 3,
+    Texture = 1 << 4
 };
 
 struct PositionComponent {
@@ -34,5 +35,7 @@ struct SizeComponent {
 struct ColorComponent {
     vec4 color;
 };
+
+struct EmptyComponent {};
 
 #endif //ENUM_H

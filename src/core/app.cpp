@@ -52,9 +52,9 @@ void createEntitySquares(int w, int h, int hor_Count, int vert_Count, ComponentM
     int squareHeight = h;
     auto tex = loadTexture("resources/assets/face.png");
 
-    for (int i = 0; i < hor_Count; i++)
+    for (int i = 0; i < vert_Count; i++)
     {
-        for (int j = 0; j < vert_Count; j++)
+        for (int j = 0; j < hor_Count; j++)
         {
             // Entity entity;
             // entity.addComponent<PositionComp>(Position, i* (float)squareWidth, j*(float)squareHeight);
@@ -88,8 +88,8 @@ int app::init()
     // entityManager(componentManager);
 
 
-    int squareWidth = 2;
-    int squareHeight = 2;
+    int squareWidth = 20;
+    int squareHeight = 20;
     int hor_Count = windowSize.x / squareWidth;
     int vert_Count = windowSize.y / squareHeight;
 
@@ -132,13 +132,14 @@ void app::pollEvents()
                 }
                 break;
             case SDL_MOUSEBUTTONDOWN:
-            case SDL_MOUSEMOTION:
+            // case SDL_MOUSEMOTION:
                 if (e.button.button == SDL_BUTTON_LEFT) {
                     //std::cout << "Left button pressed " << e.button.x << " " <<  e.button.y << std::endl;
                     mouseLeftClicked = true;
                     mousePos = vec4(e.button.x, engine.getWindowSize().y -  e.button.y, 0.0f, 1.0f);
                 }else if (e.button.button == SDL_BUTTON_RIGHT) {
                     mouseRightClicked = true;
+                    mousePos = vec4(e.button.x, engine.getWindowSize().y -  e.button.y, 0.0f, 1.0f);
                 }
                 break;
             case SDL_MOUSEBUTTONUP:
@@ -173,39 +174,91 @@ void app::update()
     float speed = 1.0f;
     float time = (startTicks2 / 1000.0f) * speed;
 
-    if (mouseLeftClicked) {
-        //todo: change here
-        // mouseLeftClicked = false;
-        // Entity entity;
-        // entity.addComponent<PositionComp>(Position, mousePos.x, mousePos.y);
-        // entity.addComponent<SizeComp>(Size, (float)squareWidth, (float)squareHeight);
-        // entity.addComponent<ColorComp>(Color, vec4(1.0f, 1.0f, 1.0f, 1.0f));
-        // // entity.addComponent<TextureComp>(Texture, loadTexture("resources/assets/heart.jpg"));
-        // //entity.makeDirty();
-        //
-        // gravitySystem.addEntity(entity);
-        // addEntity(entity);
-    }
-
-
-    for (auto& [entityId, mask] : componentManager.getEntityMask()) {
-        PositionComponent* position = componentManager.getPositionComponent(entityId);
-        ColorComponent* color = componentManager.getColorComponent(entityId);
-
-        auto p = rand() % 100 + 1;
+    if (updateCount++ >= 1) {
+        updateCount = 0;
+        unsigned int p = rand() % componentManager.getEntityMasks().size() - 1;
         auto m = rand() + 1;
 
-        auto posx = position->x;
-        auto posy = position->y;
+        if (m % 2 == 0) {
+            componentManager.removeEntity(p);
+        }
+        else {
+            float px = rand() % (int)winSize.x - 20;
+            float py = rand() % (int)winSize.y - 20;
 
-        vec4 color2 = vec4((255.0f / (float)hor_Count) * posx / 255.0f, (255.0f / (float)vert_Count) * posy / 6500.0f, fabs(sin((startTicks2 / 1000) * PI)));
-        color->color = color2;
-        position->x = m % 2 == 0 ? posx + p : posx - p;
-        position->y = m % 2 == 0 ? posy - p : posy + p;
+            float cx = rand() % 180 - 30;
+            float cy = rand() % 255 - 30;
+            float cz = rand() % 100 - 30;
 
-        // size.w = m % 2 == 0 ? size.w + s : size.w - s;
-        // size.h = m % 2 == 0 ? size.h - s : size.h + s;
+
+            Entity e = componentManager.createEntity();
+            // vec4 color2 = vec4((255.0f / (float)hor_Count) * (px / 255.0f), (255.0f / (float)vert_Count) * py / 6500.0f, 1);
+            componentManager.addComponent(e, PositionComponent{px, py});
+            componentManager.addComponent(e, ColorComponent{vec4(cx, cy, cz)});
+            componentManager.addComponent(e, SizeComponent{20, 20});
+        }
     }
+
+
+
+    // if (mouseLeftClicked) {
+    //     //todo: change here
+    //     mouseLeftClicked = false;
+    //
+    //     // mx 10 my 10 eId 0
+    //     // mx 10 my 60 eId 1
+    //     // mx 60 my 10 eId 11
+    //     // w 50 h 50
+    //
+    //     Entity eId = (int)mousePos.x / 50 * 10 + (int)mousePos.y / 50;
+    //     std::cout << eId << " MX: " << mousePos.x << " MY: " << mousePos.y << " CALC: " << ((int)mousePos.x / 50) * 10 << " CALC2: " << (int)mousePos.y / 50 << std::endl;
+    //     if (eId < componentManager.getEntityMasks().size()) {
+    //         componentManager.removeEntity(eId);
+    //     }
+    //     // componentManager.removeEntity();
+    //     // auto e = componentManager.createEntity();
+    //     // // vec4 color2 = vec4((255.0f / (float)hor_Count) * (i* (float)squareWidth) / 255.0f, (255.0f / (float)vert_Count) * (j*(float)squareHeight) / 6500.0f, 1);
+    //     // componentManager.addComponent(e, PositionComponent{mousePos.x, mousePos.y});
+    //     // componentManager.addComponent(e, ColorComponent{vec4(1.0f, 1.0f, 1.0f, 1.0f)});
+    //     // componentManager.addComponent(e, SizeComponent{(float)squareWidth, (float)squareHeight});
+    //     // Entity entity;
+    //     // entity.addComponent<PositionComp>(Position, mousePos.x, mousePos.y);
+    //     // entity.addComponent<SizeComp>(Size, (float)squareWidth, (float)squareHeight);
+    //     // entity.addComponent<ColorComp>(Color, vec4(1.0f, 1.0f, 1.0f, 1.0f));
+    //     // // entity.addComponent<TextureComp>(Texture, loadTexture("resources/assets/heart.jpg"));
+    //     // //entity.makeDirty();
+    //     //
+    //     // gravitySystem.addEntity(entity);
+    //     // addEntity(entity);
+    // }
+    // else if (mouseRightClicked) {
+    //     mouseRightClicked = false;
+    //     Entity e = componentManager.createEntity();
+    //     // vec4 color2 = vec4((255.0f / (float)hor_Count) * (i* (float)squareWidth) / 255.0f, (255.0f / (float)vert_Count) * (j*(float)squareHeight) / 6500.0f, 1);
+    //     componentManager.addComponent(e, PositionComponent{mousePos.x, mousePos.y});
+    //     componentManager.addComponent(e, ColorComponent{vec4((float)mousePos.x, (float)mousePos.y, 0.0f, 1.0f)});
+    //     componentManager.addComponent(e, SizeComponent{50, 50});
+    // }
+
+
+    // for (Entity entityId = 0; entityId < componentManager.entityCount; entityId++) {
+    //     PositionComponent* position = componentManager.getPositionComponent(entityId);
+    //     ColorComponent* color = componentManager.getColorComponent(entityId);
+    //
+    //     auto p = rand() % 100 + 1;
+    //     auto m = rand() + 1;
+    //
+    //     auto posx = position->x;
+    //     auto posy = position->y;
+    //
+    //     vec4 color2 = vec4((255.0f / (float)hor_Count) * posx / 255.0f, (255.0f / (float)vert_Count) * posy / 6500.0f, fabs(sin((startTicks2 / 1000) * PI)));
+    //     color->color = color2;
+    //     position->x = m % 2 == 0 ? posx + p : posx - p;
+    //     position->y = m % 2 == 0 ? posy - p : posy + p;
+    //
+    //     // size.w = m % 2 == 0 ? size.w + s : size.w - s;
+    //     // size.h = m % 2 == 0 ? size.h - s : size.h + s;
+    // }
 
 
     //
@@ -269,7 +322,7 @@ void app::draw()
     // }
 
 
-    engine.calculateFPS(componentManager.getEntityMask().size());
+    engine.calculateFPS(componentManager.getEntityMasks().size());
 }
 
 int app::pause()
