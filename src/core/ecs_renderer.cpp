@@ -1,7 +1,9 @@
 #include "ecs_renderer.h"
-
 #include <renderer.h>
 #include <ecs/entityManager.h>
+#include <string>
+#define STB_TRUETYPE_IMPLEMENTATION
+#include "stb_truetype.h"
 
 Renderer::Renderer(Shader& s, ComponentManager& e) : shader(s), componentManager(e)
 {
@@ -13,6 +15,10 @@ Renderer::~Renderer()
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
+
+    if (textAtlasTextureID != 0) {
+        glDeleteTextures(1, &textAtlasTextureID);
+    }
 
     shader.deleteProgram();
 }
@@ -432,6 +438,157 @@ void Renderer::drawEntitiesBuffer() {
     //glBindVertexArray(0);
 
     // clear();
+}
+
+std::vector<unsigned char> loadFile(const std::string& filename) {
+    std::ifstream file(filename, std::ios::binary);
+
+    if (!file.is_open()) {
+        throw std::runtime_error("Failed to open font file: " + filename);
+    }
+
+    // Dosyanın boyutunu belirle
+    file.seekg(0, std::ios::end);
+    std::streampos length = file.tellg();
+    file.seekg(0, std::ios::beg);
+
+    if (length == 0) {
+        throw std::runtime_error("Font file is empty: " + filename);
+    }
+
+    // Dosya içeriğini vektöre yükle
+    std::vector<unsigned char> buffer(length);
+    file.read(reinterpret_cast<char*>(buffer.data()), length);
+
+    if (!file) {
+        throw std::runtime_error("Failed to read font file: " + filename);
+    }
+
+    return buffer;
+}
+
+
+void Renderer::loadTextAtlas(const std::string& fontPath, unsigned int fontSize) {
+    std::vector<unsigned char> fontData = loadFile(fontPath);
+
+    stbtt_aligned_quad q;
+    float cx = 0;
+
+    glActiveTexture(GL_TEXTURE0);
+    glGenTextures(1, &textAtlasTextureID);
+    glBindTexture(GL_TEXTURE_2D, textAtlasTextureID);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    unsigned char* bitmap = new unsigned char[512 * 512];
+    std::cout << "FONT SIZE: " << fontData.size() << std::endl;
+    std::cout << "FONT DATA: " << fontData.data() << std::endl;
+    stbtt_BakeFontBitmap(fontData.data(), 0, fontSize, bitmap, 512, 512, 32, 96, cdata); // ASCII 32'den 127'ye (96 karakter)
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, 512, 512, 0, GL_RED, GL_UNSIGNED_BYTE, bitmap);
+    delete[] bitmap;
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void Renderer::drawText(const std::string& text, float x, float y, float scale, const vec4& color) {
+
+
+    if (textAtlasTextureID == 0) {
+        throw std::runtime_error("Text atlas texture is not initialized");
+    }
+
+    stbtt_aligned_quad q;
+    float cx = x;
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, textAtlasTextureID);
+    shader.use();
+    shader.setVec4("windowSize", windowSize);
+    shader.setInt("texture1", 0);
+
+    for (char c : text) {
+        if (c < 32 || c > 127) continue; // Sadece ASCII karakterleri işleyelim
+
+        stbtt_GetBakedQuad(cdata, 512, 512, c - 32, &cx, &y, &q, false);
+
+        float w = (q.x1 - q.x0) * scale;
+        float h = (q.y1 - q.y0) * scale;
+
+        // Dört köşe için Vertex nesnelerini oluştur
+        // Vertex{x, position->y, size->w, size->h, color->color, 0,0}
+        Vertex v1 = { q.x0, q.y1, w, h, color, q.s0, q.t0 };
+        Vertex v2 = { q.x1, q.y1, w, h, color, q.s1, q.t0 };
+        Vertex v3 = { q.x0, q.y0, w, h, color, q.s0, q.t1 };
+        Vertex v4 = { q.x1, q.y0, w, h, color, q.s1, q.t1 };
+
+        // Köşeleri vertices listesine ekle
+        vertices.push_back(v1);
+        vertices.push_back(v2);
+        vertices.push_back(v3);
+        vertices.push_back(v4);
+
+        // Üçgenler için indeksleri ekle
+        indices.push_back(vertexCount + 0);
+        indices.push_back(vertexCount + 1);
+        indices.push_back(vertexCount + 2);
+        indices.push_back(vertexCount + 1);
+        indices.push_back(vertexCount + 3);
+        indices.push_back(vertexCount + 2);
+
+        // vertices.push_back(Vertex{x, y, w, h, color, q.s0, q.t0});
+        // // Sol üst köşe
+        // vertices.push_back(Vertex{x, y + h, w, h, color, q.s1, q.t0});
+        // // Sağ alt köşe
+        // vertices.push_back(Vertex{x + w, y, w, h, color, q.s1, q.t1});
+        // // Sağ üst köşe
+        // vertices.push_back(Vertex{x + w, y + h, w, h, color, q.s0, q.t1});
+
+        // Köşeleri vertices listesine ekle
+        // vertices.push_back(v1);
+        // vertices.push_back(v2);
+        // vertices.push_back(v3);
+        // vertices.push_back(v4);
+        //
+        // // Üçgenler için indeksleri ekle
+        // indices.push_back(vertexCount + 0);
+        // indices.push_back(vertexCount + 1);
+        // indices.push_back(vertexCount + 2);
+        // indices.push_back(vertexCount + 1);
+        // indices.push_back(vertexCount + 2);
+        // indices.push_back(vertexCount + 3);
+
+        vertexCount += 4;
+    }
+
+    // draw();
+
+    // glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    // // glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_DYNAMIC_DRAW);
+    // glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(Vertex), vertices.data());
+    //
+    // glBindVertexArray(VAO);
+    // glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, nullptr);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_DYNAMIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_DYNAMIC_DRAW);
+
+    glBindVertexArray(VAO);
+    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    // glDisable(GL_BLEND);
+    glBindVertexArray(0);
+
+    clear();
 }
 
 void Renderer::drawEntities(std::vector<Entity>& entities, const float deltaTime) {
