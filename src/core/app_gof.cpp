@@ -1,11 +1,14 @@
 #if ASDASD_GOF
-
 #include "app.h"
 #include "ecs_renderer.h"
 #include "texture.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+
+app::app(){
+
+}
 
 int app::start(int width, int height)
 {
@@ -180,7 +183,7 @@ texture2D loadTexture(const char* filePath) {
 }
 
 //endregion
-void createEntitySquares(int w, int h, int hor_Count, int vert_Count, app& context) {
+void createEntitySquares(int w, int h, int hor_Count, int vert_Count, ComponentManager& context) {
     int squareWidth = w;
     int squareHeight = h;
     auto tex = loadTexture("resources/assets/container.jpg");
@@ -189,13 +192,11 @@ void createEntitySquares(int w, int h, int hor_Count, int vert_Count, app& conte
     {
         for (int j = 0; j < vert_Count; j++)
         {
-            Entity entity;
-            entity.addComponent<PositionComp>(Position, i* (float)squareWidth, j*(float)squareHeight);
-            entity.addComponent<SizeComp>(Size, (float)squareWidth, (float)squareHeight);
-            entity.addComponent<ColorComp>(Color, vec4(1.0f, 1.0f, 1.0f, 1.0f));
-            entity.addComponent<TextureComp>(Texture, tex);
-
-            context.addEntity(entity);
+         Entity e = context.createEntity();
+         // vec4 color2 = vec4((255.0f / (float)hor_Count) * (px / 255.0f), (255.0f / (float)vert_Count) * py / 6500.0f, 1);
+         context.addComponent(e, PositionComponent{i* (float)squareWidth, j*(float)squareHeight});
+         context.addComponent(e, ColorComponent{vec4(1.0f, 1.0f, 1.0f, 1.0f)});
+         context.addComponent(e, SizeComponent{20, 20});
         }
     }
 }
@@ -208,17 +209,17 @@ int app::init()
     vec4 windowSize = engine.getWindowSize();
     auto* shader = new Shader("resources/shaders/vertex.vert", "resources/shaders/fragment.frag");
     //Shader shader = Shader("resources/shaders/vertex.vert", "resources/shaders/fragment.frag");
-    engine.ecs_renderer = new Renderer(*shader);
+     engine.ecs_renderer = new Renderer(*shader, componentManager);
     engine.ecs_renderer->windowSize = windowSize;
 
-    int squareWidth = 30;
-    int squareHeight = 30;
+    int squareWidth = 20;
+    int squareHeight = 20;
     int hor_Count = windowSize.x / squareWidth;
     int vert_Count = windowSize.y / squareHeight;
 
     gof = new lifeStruct(hor_Count, vert_Count);
     createLife(gof, windowSize);
-    createEntitySquares(squareWidth, squareHeight, hor_Count, vert_Count, *this);
+    createEntitySquares(squareWidth, squareHeight, hor_Count, vert_Count, componentManager);
 
     //initSquare();
     //move to another method (camPos, camView, camZoom)
@@ -278,8 +279,8 @@ void app::update()
 
     vec4 winSize = engine.getWindowSize();
 
-    int squareWidth = 50;
-    int squareHeight = 50;
+    int squareWidth = 20;
+    int squareHeight = 20;
     int hor_Count = winSize.x / squareWidth;
     int vert_Count = winSize.y / squareHeight;
 
@@ -289,9 +290,9 @@ void app::update()
 
     for (int i = 0; i < gof->m; i++) {
         for (int j = 0; j < gof->n; j++) {
-            auto* color = entities[i*gof->m + j].getComponent<ColorComp>(Color);
+            auto* color = componentManager.getColorComponent(i*gof->m + j);
             //color->color = gof->currState[i][j] ? vec4(1.0f, 1.0f, 1.0f, 1.0f) : vec4(0.0f, 0.0f, 0.0f, 0.7f);
-            color->updateValue(gof->currState[i][j] ? vec4(1.0f, 1.0f, 1.0f, 1.0f) : vec4(0.0f, 0.0f, 0.0f, 0.0f));
+            color->color = gof->currState[i][j] ? vec4(1.0f, 1.0f, 1.0f, 1.0f) : vec4(0.0f, 0.0f, 0.0f, 0.0f);
         }
     }
 
@@ -310,7 +311,7 @@ void app::update()
 }
 
 
-//color and updated frame draw in here 
+//color and updated frame draw in here
 void app::draw()
 {
     SDL_GL_SwapWindow(engine.getWindow());
@@ -318,8 +319,10 @@ void app::draw()
     glClear(GL_COLOR_BUFFER_BIT);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    engine.ecs_renderer->drawEntities(entities);
-    engine.calculateFPS();
+     engine.ecs_renderer->drawEntitiesBuffer();
+     engine.calculateFPS(componentManager.getEntityMasks().size());
+    // engine.ecs_renderer->drawEntities(entities);
+    // engine.calculateFPS();
 }
 
 int app::pause()

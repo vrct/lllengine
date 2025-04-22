@@ -302,7 +302,7 @@ void app::update()
 }
 
 
-//color and updated frame draw in here 
+//color and updated frame draw in here
 void app::draw()
 {
     SDL_GL_SwapWindow(engine.getWindow());
