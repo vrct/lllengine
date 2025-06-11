@@ -2,7 +2,7 @@
 #include "GL/glew.h"
 
 texture2D::texture2D()
-    : width(0), height(0), internal_Format(GL_RGB), image_Format(GL_RGB), wrap_S(GL_REPEAT), wrap_T(GL_REPEAT), filter_Min(GL_LINEAR), filter_Max(GL_LINEAR)
+    : width(0), height(0), internal_Format(GL_RGB), image_Format(GL_RGB), wrap_S(GL_CLAMP_TO_EDGE), wrap_T(GL_CLAMP_TO_EDGE), filter_Min(GL_NEAREST), filter_Max(GL_NEAREST)
 {
     glGenTextures(1, &this->id);
 }

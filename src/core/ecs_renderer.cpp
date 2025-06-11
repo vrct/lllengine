@@ -203,10 +203,13 @@ void Renderer::addEntities(Entity& entity) {
 void Renderer::updateEntitiesVerticesBuffer() {
     for (Entity entityId = 0; entityId < componentManager.getEntityMasks().size(); entityId++) {
         auto& mask = componentManager.getEntityMasks()[entityId];
-        if (mask.test(Position) && mask.test(Size) && mask.test(Color)) {
+        if (mask.test(Position) && mask.test(Size) && mask.test(Color) || mask.test(Texture)) {
             PositionComponent* position = componentManager.getPositionComponent(entityId);
             SizeComponent* size = componentManager.getSizeComponent(entityId);
             ColorComponent* color = componentManager.getColorComponent(entityId);
+            TextureComponent* texture = componentManager.getTextureComponent(entityId);
+
+            texture->texture.bind();
 
             auto x = position->x;
             auto y = position->y;
@@ -271,10 +274,13 @@ void Renderer::updateEntitiesVerticesBuffer() {
 void Renderer::addEntitiesBuffer() {
     for (Entity entityId = 0; entityId < componentManager.getEntityMasks().size(); entityId++) {
         auto& mask = componentManager.getEntityMasks()[entityId];
-        if (mask.test(Position) && mask.test(Size) && mask.test(Color)) {
+        if (mask.test(Position) && mask.test(Size) && mask.test(Color) || mask.test(Texture)) {
             PositionComponent* position = componentManager.getPositionComponent(entityId);
             SizeComponent* size = componentManager.getSizeComponent(entityId);
             ColorComponent* color = componentManager.getColorComponent(entityId);
+            TextureComponent* texture = componentManager.getTextureComponent(entityId);
+
+            texture->texture.bind();
 
             vertices.push_back(Vertex{position->x, position->y, size->w, size->h, color->color, 0,0});
             // Sol üst köşe
@@ -507,6 +513,7 @@ void Renderer::drawText(const std::string& text, float x, float y, float scale, 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textAtlasTextureID);
     shader.use();
+    shader.setFloat("hasTexture", true);
     shader.setVec4("windowSize", windowSize);
     shader.setInt("texture1", 0);
 
@@ -573,22 +580,22 @@ void Renderer::drawText(const std::string& text, float x, float y, float scale, 
     // glBindVertexArray(VAO);
     // glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, nullptr);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_DYNAMIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_DYNAMIC_DRAW);
-
-    glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
-    glBindVertexArray(0);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    // glDisable(GL_BLEND);
-    glBindVertexArray(0);
-
-    clear();
+    // glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    // glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_DYNAMIC_DRAW);
+    //
+    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    // glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_DYNAMIC_DRAW);
+    //
+    // glBindVertexArray(VAO);
+    // glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+    // glBindVertexArray(0);
+    //
+    // glBindTexture(GL_TEXTURE_2D, 0);
+    //
+    // // glDisable(GL_BLEND);
+    // glBindVertexArray(0);
+    //
+    // clear();
 }
 
 void Renderer::drawEntities(std::vector<Entity>& entities, const float deltaTime) {

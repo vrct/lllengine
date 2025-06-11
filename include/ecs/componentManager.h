@@ -31,6 +31,9 @@ class ComponentManager {
         std::vector<ColorComponent> colorComponents;
         std::vector<Entity> freeColorIndices;
 
+        std::vector<TextureComponent> textureComponents;
+        std::vector<Entity> freeTextureIndices;
+
         Entity nextEntityId = 0;
 
 
@@ -38,6 +41,7 @@ class ComponentManager {
         size_t positionTotalSize = 0;
         size_t sizeTotalSize = 0;
         size_t colorTotalSize = 0;
+        size_t textureTotalSize = 0;
 
     public:
 
@@ -145,6 +149,23 @@ class ComponentManager {
             // entityMasks[entityId].set(Color);
         }
 
+        void addComponent(Entity entityId, const TextureComponent& component) {
+            if (freeTextureIndices.empty()) {
+                textureComponents.emplace_back(component);
+                entityMasks[entityId].set(Texture);
+            } else {
+                Entity index = freeTextureIndices.back();
+                freeTextureIndices.pop_back();
+                textureComponents[index] = {component};
+                entityMasks[entityId].set(Texture);
+            }
+            // if (colorComponents.size() <= entityId) {
+            //     colorComponents.resize(entityId + 1);
+            // }
+            // colorComponents[entityId] = component;
+            // entityMasks[entityId].set(Color);
+        }
+
         PositionComponent* getPositionComponent(Entity entityId) {
                 return &positionComponents[entityId];
             if (entityMasks[entityId].test(Position)) {
@@ -161,6 +182,13 @@ class ComponentManager {
 
         ColorComponent* getColorComponent(Entity entityId) {
                 return &colorComponents[entityId];
+            if (entityMasks[entityId].test(Color)) {
+            }
+            return nullptr;
+        }
+
+        TextureComponent* getTextureComponent(Entity entityId) {
+                return &textureComponents[entityId];
             if (entityMasks[entityId].test(Color)) {
             }
             return nullptr;

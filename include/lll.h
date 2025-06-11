@@ -45,14 +45,18 @@ struct lll
             Uint32 currentTime = SDL_GetTicks();
 
             float elapsedSeconds = (currentTime - startTime) / 1000.0f;
-            if(elapsedSeconds >= 1.0f)
+            if(elapsedSeconds >= 0.05f)
             {
                 FPS = frameCount / elapsedSeconds;
-                std::cout << "FPS: " <<  FPS << " ECS_ENTITYCOUNT: " << entityCount << std::endl;
+                // std::cout << "FPS: " <<  FPS << " ECS_ENTITYCOUNT: " << entityCount << std::endl;
                 //std::cout << "VERTICECOUNT: " << renderer.vertexCount << std::endl; 
                 frameCount = 0;
                 startTime = currentTime;
             }
+        }
+
+        float getFPS() {
+            return FPS;
         }
 
         int InitSDL()

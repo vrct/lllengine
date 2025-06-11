@@ -1,9 +1,10 @@
 #include "app.h"
 #include "ecs_renderer.h"
+#include <format>
 #include "texture.h"
 
-// #define STB_IMAGE_IMPLEMENTATION
-// #include "stb_image.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 app::app(){
 
@@ -31,20 +32,20 @@ int app::start(int width, int height)
     return EXIT_SUCCESS;
 }
 
-// texture2D loadTexture(const char* filePath) {
-//     texture2D texture;
-//
-//     int width, height, nrChannels;
-//     unsigned char* data = stbi_load(filePath, &width, &height, &nrChannels, 0);
-//     if (data) {
-//         texture.generate(width, height, data);
-//         stbi_image_free(data);
-//     } else {
-//         std::cout << "Failed to load texture: " << filePath << std::endl;
-//     }
-//
-//     return texture;
-// }
+texture2D loadTexture(const char* filePath) {
+    texture2D texture;
+
+    int width, height, nrChannels;
+    unsigned char* data = stbi_load(filePath, &width, &height, &nrChannels, 0);
+    if (data) {
+        texture.generate(width, height, data);
+        stbi_image_free(data);
+    } else {
+        std::cout << "Failed to load texture: " << filePath << std::endl;
+    }
+
+    return texture;
+}
 
 //text icin eklendi
 
@@ -52,7 +53,8 @@ int app::start(int width, int height)
 void createEntitySquares(int w, int h, int hor_Count, int vert_Count, ComponentManager& context) {
     int squareWidth = w;
     int squareHeight = h;
-    // auto tex = loadTexture("resources/assets/face.png");
+    auto tex = loadTexture("resources/assets/fill3.jpg");
+    auto tex2 = loadTexture("resources/assets/heart.jpg");
 
     for (int i = 0; i < vert_Count; i++)
     {
@@ -71,6 +73,7 @@ void createEntitySquares(int w, int h, int hor_Count, int vert_Count, ComponentM
             context.addComponent(e, PositionComponent{i* (float)squareWidth, j*(float)squareHeight});
             context.addComponent(e, ColorComponent{color2});
             context.addComponent(e, SizeComponent{(float)squareWidth, (float)squareHeight});
+            context.addComponent(e, TextureComponent {j % 2 == 0 ? tex : tex2});
         }
     }
 }
@@ -90,14 +93,14 @@ int app::init()
     // entityManager(componentManager);
 
 
-    int squareWidth = 20;
-    int squareHeight = 20;
+    int squareWidth = 40;
+    int squareHeight = 40;
     int hor_Count = windowSize.x / squareWidth;
     int vert_Count = windowSize.y / squareHeight;
 
     // auto testPic2 = loadTexture("resources/assets/heart.jpg");
     //testPic = testPic2;
-    // createEntitySquares(squareWidth, squareHeight, hor_Count, vert_Count, componentManager);
+    createEntitySquares(squareWidth, squareHeight, hor_Count, vert_Count, componentManager);
 
     try {
         engine.ecs_renderer->loadTextAtlas("resources/font/notosans.ttf", 48);
@@ -105,6 +108,13 @@ int app::init()
         std::cerr << "Error loading font: " << e.what() << std::endl;
         return -1;
     }
+
+    // auto entity = componentManager.createEntity();
+    // componentManager.addComponent(entity, PositionComponent{0, windowSize.y / 2});
+    // componentManager.addComponent(entity, SizeComponent{(float)200, (float)200});
+    // componentManager.addComponent(entity, ColorComponent{vec4(255,255,255)});
+    // componentManager.addComponent(entity, TextureComponent{testPic2});
+
     //initSquare();
     //move to another method (camPos, camView, camZoom)
     //cam = Camera(vec4(), vec4(windowSize.x, windowSize.y), 100);
@@ -172,9 +182,6 @@ void app::update()
         SDL_Delay(1000.f / maxFPS - frameTicks);
     }
 
-
-
-
     // vec4 winSize = engine.getWindowSize();
 
     // int squareWidth = 20;
@@ -222,8 +229,10 @@ void app::draw()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     //gravitySystem.update(startTicks2);
     //engine.ecs_renderer->drawEntities(entities, startTicks2);
-    // engine.ecs_renderer->drawEntitiesBuffer();
-    engine.ecs_renderer->drawText("MERTINKI 15 CM", engine.getWindowSize().x / 2 - 150, engine.getWindowSize().y / 2, 1.0f, vec4(1.0f, 1.0f, 1.0f, 1.0f));
+    std::string fpsString = "FPS: " + std::to_string(engine.getFPS());
+    engine.ecs_renderer->drawEntitiesBuffer();
+    // engine.ecs_renderer->drawText(fpsString, 0, engine.getWindowSize().y, 1.0f, vec4(.0f, 0.0f, 0.0f, 1.0f));
+    // engine.ecs_renderer->drawText("SIRK MEYMUNU MERT !!", engine.getWindowSize().x / 2 - 150, engine.getWindowSize().y / 2, 1.0f, vec4(1.0f, 1.0f, 1.0f, 1.0f));
 
 
     // if (mouseRightClicked) {

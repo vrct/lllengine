@@ -5,6 +5,7 @@
 #ifndef ENUM_H
 #define ENUM_H
 #include <vec4.h>
+#include "texture.h"
 
 enum ComponentType {
     Position = 1 << 0,
@@ -34,6 +35,10 @@ struct SizeComponent {
 
 struct ColorComponent {
     vec4 color;
+};
+//
+struct TextureComponent {
+    texture2D texture;
 };
 
 struct EmptyComponent {};
