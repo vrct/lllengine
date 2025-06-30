@@ -44,6 +44,8 @@ texture2D loadTexture(const char* filePath) {
         std::cout << "Failed to load texture: " << filePath << std::endl;
     }
 
+
+
     return texture;
 }
 
@@ -100,7 +102,7 @@ int app::init()
 
     // auto testPic2 = loadTexture("resources/assets/heart.jpg");
     //testPic = testPic2;
-    createEntitySquares(squareWidth, squareHeight, hor_Count, vert_Count, componentManager);
+    // createEntitySquares(squareWidth, squareHeight, hor_Count, vert_Count, componentManager);
 
     try {
         engine.ecs_renderer->loadTextAtlas("resources/font/notosans.ttf", 48);
@@ -230,8 +232,9 @@ void app::draw()
     //gravitySystem.update(startTicks2);
     //engine.ecs_renderer->drawEntities(entities, startTicks2);
     std::string fpsString = "FPS: " + std::to_string(engine.getFPS());
-    engine.ecs_renderer->drawEntitiesBuffer();
-    // engine.ecs_renderer->drawText(fpsString, 0, engine.getWindowSize().y, 1.0f, vec4(.0f, 0.0f, 0.0f, 1.0f));
+    // engine.ecs_renderer->drawEntitiesBuffer();
+
+    engine.ecs_renderer->drawText(fpsString, 0, engine.getWindowSize().y, 1.0f, vec4(.0f, 0.0f, 0.0f, 1.0f));
     // engine.ecs_renderer->drawText("SIRK MEYMUNU MERT !!", engine.getWindowSize().x / 2 - 150, engine.getWindowSize().y / 2, 1.0f, vec4(1.0f, 1.0f, 1.0f, 1.0f));
 
 
